@@ -1,10 +1,12 @@
-package com.search.engine.pojo;
+package com.search.engine.cache;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
+import com.search.engine.pojo.DocInfo;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -14,15 +16,16 @@ import java.util.Map;
 /**
  * Created by yjj on 15/11/29.
  */
-public class Invert2 {
+@Component
+public class InvertCache2 {
 
 
     private Map<String, List<InvertDocInfo>> invertCache = Maps.newHashMap();
 
 
-    public void buildInvert(List<Forward.DocInfo> forwardCache) {
+    public void buildInvert(List<DocInfo> forwardCache) {
 
-        for (Forward.DocInfo docInfo : forwardCache) {
+        for (DocInfo docInfo : forwardCache) {
 
             for (Map.Entry<String, Collection<Integer>> entry : docInfo.getWorldPosition().asMap().entrySet()) {
 
@@ -43,7 +46,7 @@ public class Invert2 {
         }
 
         Integer docCount = forwardCache.size();
-        for (Forward.DocInfo docInfo : forwardCache) {
+        for (DocInfo docInfo : forwardCache) {
 
             Integer worldCount = docInfo.getWorldCount();
             for (Map.Entry<String, List<InvertDocInfo>> entry : invertCache.entrySet()) {
@@ -149,6 +152,6 @@ public class Invert2 {
             stringBuilder.append(entry.getKey()).append(":").append(Joiner.on(" ").join(entry.getValue())).append("\n");
         }
 
-        return "Invert2{\n" + stringBuilder.toString() + '}';
+        return "InvertCache2{\n" + stringBuilder.toString() + '}';
     }
 }

@@ -1,15 +1,21 @@
-package com.search.engine.pojo;
+package com.search.engine.cache;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.*;
+import com.search.engine.pojo.DocInfo;
+import com.search.engine.pojo.MergeNode;
+import com.search.engine.pojo.WordInfo;
 import com.search.engine.util.SortUtil;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 /**
  * Created by yjj on 15/11/22.
  */
-public class Invert1 {
+
+@Component
+public class InvertCache1 {
 
 
     private Multimap<String, Integer> invertCache = ArrayListMultimap.create();
@@ -24,9 +30,9 @@ public class Invert1 {
         return worldInfoCache;
     }
 
-    public void buildInvert(List<Forward.DocInfo> forwardCache) {
+    public void buildInvert(List<DocInfo> forwardCache) {
 
-        for (Forward.DocInfo docInfo : forwardCache) {
+        for (DocInfo docInfo : forwardCache) {
             for (String world : docInfo.getWorldPosition().keys()) {
 
                 List<Integer> docIds = (List<Integer>) invertCache.get(world);
@@ -38,7 +44,7 @@ public class Invert1 {
         }
 
         Integer docCount = forwardCache.size();
-        for (Forward.DocInfo docInfo : forwardCache) {
+        for (DocInfo docInfo : forwardCache) {
 
             Integer worldCount = docInfo.getWorldCount();
             for (Map.Entry<String, Collection<Integer>> entry : docInfo.getWorldPosition().asMap().entrySet()) {
@@ -75,7 +81,7 @@ public class Invert1 {
                     .withKeyValueSeparator("=>").join(entry.getValue())).append("\n");
         }
 
-        return "Invert1{"
+        return "InvertCache1{"
                 + invert
                 + "worldInfoCache=" + worldInfo +
                 '}';
@@ -196,102 +202,5 @@ public class Invert1 {
         List<Integer> res = filterDocId(docIds, string);
         System.out.println("contain " + string + " docIds:" + Joiner.on(" ").join(res));
     }
-
-
-    public static class WordInfo {
-
-        private List<Integer> posList;
-        private double tf;
-        private double idf;
-        private double rank;
-
-
-        public WordInfo(Collection<Integer> posList, double tf, double idf, double rank) {
-            this.posList = Lists.newArrayList(posList);
-            this.tf = tf;
-            this.idf = idf;
-            this.rank = rank;
-        }
-
-        public List<Integer> getPosList() {
-
-            return posList;
-        }
-
-        public void setPosList(List<Integer> posList) {
-            this.posList = posList;
-        }
-
-        public double getTf() {
-            return tf;
-        }
-
-        public void setTf(double tf) {
-            this.tf = tf;
-        }
-
-        public double getIdf() {
-            return idf;
-        }
-
-        public void setIdf(double idf) {
-            this.idf = idf;
-        }
-
-        public double getRank() {
-            return rank;
-        }
-
-        public void setRank(double rank) {
-            this.rank = rank;
-        }
-
-        @Override
-        public String toString() {
-            return "WordInfo{" +
-                    "posList=" + Joiner.on(" ").join(posList) +
-                    ", tf=" + tf +
-                    ", idf=" + idf +
-                    ", rank=" + rank +
-                    '}';
-        }
-    }
-
-
-    static class MergeNode {
-        private int order;
-        private int offset;
-        private List<Integer> posList = Lists.newArrayList();
-
-        public MergeNode(int order, List<Integer> posList) {
-            this.order = order;
-            this.posList = posList;
-        }
-
-        public int getOrder() {
-            return order;
-        }
-
-        public void setOrder(int order) {
-            this.order = order;
-        }
-
-        public List<Integer> getPosList() {
-            return posList;
-        }
-
-        public void setPosList(List<Integer> posList) {
-            this.posList = posList;
-        }
-
-        public int getOffset() {
-            return offset;
-        }
-
-        public void setOffset(int offset) {
-            this.offset = offset;
-        }
-    }
-
 
 }

@@ -4,7 +4,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
-import com.search.engine.pojo.DocImp;
 import com.search.engine.pojo.Doc;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -109,7 +108,7 @@ public class SortUtil {
                 if (content.length() == 0) {
                     continue;
                 }
-                allContent.add(new DocImp(docId++, content));
+                allContent.add(new Doc(docId++, content));
             }
 
         } catch (Exception e) {
@@ -158,7 +157,6 @@ public class SortUtil {
         return j == dst.length() ? i - j : -1;
 
     }
-
 
 
     public static void main(String[] args) {
