@@ -8,12 +8,17 @@ import com.search.engine.pojo.MergeNode;
 import com.search.engine.pojo.WordInfo;
 import com.search.engine.util.SortUtil;
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by yjj on 15/11/29.
@@ -21,6 +26,11 @@ import java.util.List;
 
 @Component
 public class Search {
+
+    private static final Logger logger = LoggerFactory.getLogger(Search.class);
+
+    private static final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+
 
     @Resource
     private InvertCache1 invertCache1;
@@ -36,7 +46,7 @@ public class Search {
 
             List<Integer> tmp = (List<Integer>) invertCache1.getInvertCache().get(String.valueOf(string.charAt(i)));
 
-            if(CollectionUtils.isEmpty(tmp)){
+            if (CollectionUtils.isEmpty(tmp)) {
                 continue;
             }
             allDocId.add(tmp);
@@ -116,7 +126,7 @@ public class Search {
         List<Integer> integers = Lists.newArrayList();
         List<List<WordInfo>> res = Lists.newArrayList();
 
-        //List<WordInfo>[] res = new ArrayList<WordInfo>[100];
+
         for (Integer docId : docIds) {
 
             List<WordInfo> wordInfoList = Lists.newArrayList();
@@ -139,12 +149,43 @@ public class Search {
         return integers;
     }
 
-    public List<Integer> doSearch(String string) {
+    public List<Integer> doSearch(final String string) {
 
+        long begin = System.nanoTime();
         List<Integer> docIds = getDocIds(string);
-        List<Integer> res = filterDocId(docIds, string);
-        System.out.println("contain " + string + " docIds:" + Joiner.on(" ").join(res));
-        return  res;
+        long end = System.nanoTime();
+        logger.info("查询词:{}, 得到所有docIds耗时:{}毫秒, 结果数{}", new Object[]{string, (end - begin) * 1.0 / 1000000, docIds.size()});
+        begin = end;
+
+
+        List<List<Integer>> partions = Lists.partition(docIds, 100);
+
+        final List<Integer> res = filterDocId(docIds, string);
+        final Object object = new Object();
+        final CountDownLatch countDownLatch = new CountDownLatch(partions.size());
+        for (final List<Integer> integers : partions) {
+
+            threadPool.submit(new Runnable() {
+                public void run() {
+                    List<Integer> tmp = filterDocId(integers, string);
+                    synchronized (object) {
+                        res.addAll(tmp);
+                    }
+                    countDownLatch.countDown();
+                }
+            });
+
+        }
+
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            logger.error("countDownLatch 发生线程中断异常", e);
+        }
+
+        end = System.nanoTime();
+        logger.info("查询词:{}, filterDocId耗时:{}毫秒, 结果数{}", new Object[]{string, (end - begin) * 1.0 / 1000000, res.size()});
+        return res;
 
     }
 }

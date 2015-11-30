@@ -102,7 +102,7 @@ public class SortUtil {
 
         try {
 
-            Integer docId = 0;
+            Integer docId = 1;
             for (String content : Files.readLines(new File(fileName), Charsets.UTF_8)) {
                 content = content.trim();
                 if (content.length() == 0) {

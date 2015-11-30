@@ -14,11 +14,7 @@
         </property>
     </bean>
 
-
-    <bean id="invertCache1" class="com.search.engine.cache.InvertCache1"/>
-
     <context:component-scan base-package="com.search.engine.*"/>
-
 
     <import resource="aspect.xml"/>
 

@@ -11,39 +11,59 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.io.File;
 import java.util.List;
 
 /**
  * Created by yjj on 15/11/22.
  */
 
+@Component
 public class ForwardCache {
 
     private static final Logger logger = LoggerFactory.getLogger(ForwardCache.class);
 
+    private static String FILE_NAME = "/Users/yjj/m/search_engine/src/main/resources/search_data.txt";
+
 
     //docId, List<WordInfo>
     private List<DocInfo> forwardCache = Lists.newArrayList();
+    private long lastModified = 0;
 
+    @Resource
     private InvertCache1 invertCache1;
 
-    public ForwardCache() {
+    @PostConstruct
+    private void init() {
 
+        new Thread(new Runnable() {
+            public void run() {
 
-        try {
+                while (true) {
 
-            produceForward("/Users/yjj/m/search_engine/src/main/resources/search_data.txt");
+                    File file = new File(FILE_NAME);
+                    long tmpVersion = file.lastModified();
+                    if (tmpVersion > lastModified) {
 
-        } catch (Exception e) {
+                        long begin = System.currentTimeMillis();
+                        produceForward(FILE_NAME);
+                        invertCache1.buildInvert(forwardCache);
+                        lastModified = tmpVersion;
+                        logger.info("加载文件:{}成功,版本号:{}, 耗时:{}", new Object[]{FILE_NAME, lastModified, System.currentTimeMillis() - begin});
+                    }
 
-            logger.error("加载文件失败", e);
-            e.printStackTrace();
-        }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        logger.error("线程休眠出现异常", e);
+                    }
+                }
 
-
+            }
+        }).start();
     }
-
 
     public List<DocInfo> getForwardCache() {
         return forwardCache;

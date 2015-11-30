@@ -8,6 +8,7 @@ import com.search.engine.pojo.WordInfo;
 import com.search.engine.util.SortUtil;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,6 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Created by yjj on 15/11/22.
  */
 
+@Component
 public class InvertCache1 {
 
 
@@ -26,35 +28,27 @@ public class InvertCache1 {
     private Map<Integer, Map<String, WordInfo>> worldInfoCache = Maps.newHashMap();
 
 
-    public InvertCache1() {
-
-        ForwardCache forwardCache = new ForwardCache();
-        buildInvert(forwardCache.getForwardCache());
-
-    }
-
     public Multimap<String, Integer> getInvertCache() {
-
-
         return invertCache;
     }
 
     public Map<Integer, Map<String, WordInfo>> getWorldInfoCache() {
-
-
         return worldInfoCache;
     }
 
     public void buildInvert(List<DocInfo> forwardCache) {
 
 
+        Multimap<String, Integer> tmpInvertCache = ArrayListMultimap.create();
+        Map<Integer, Map<String, WordInfo>> tmpWorldInfoCache = Maps.newHashMap();
+
         for (DocInfo docInfo : forwardCache) {
             for (String world : docInfo.getWorldPosition().keys()) {
 
-                List<Integer> docIds = (List<Integer>) invertCache.get(world);
+                List<Integer> docIds = (List<Integer>) tmpInvertCache.get(world);
                 Integer index = Collections.binarySearch(docIds, docInfo.getDocId());
                 if (index < 0) {
-                    invertCache.put(world, docInfo.getDocId());
+                    tmpInvertCache.put(world, docInfo.getDocId());
                 }
             }
         }
@@ -67,19 +61,22 @@ public class InvertCache1 {
 
                 String world = entry.getKey();
                 double tf = (entry.getValue().size() * 1.0) / worldCount;
-                double idf = Math.log(docCount / invertCache.get(world).size());
+                double idf = Math.log(docCount / tmpInvertCache.get(world).size());
                 double rank = tf * idf;
 
-                Map<String, WordInfo> wordInfoMap = worldInfoCache.get(docInfo.getDocId());
+                Map<String, WordInfo> wordInfoMap = tmpWorldInfoCache.get(docInfo.getDocId());
                 if (wordInfoMap == null) {
                     wordInfoMap = Maps.newHashMap();
-                    worldInfoCache.put(docInfo.getDocId(), wordInfoMap);
+                    tmpWorldInfoCache.put(docInfo.getDocId(), wordInfoMap);
                 }
 
                 wordInfoMap.put(world, new WordInfo(docInfo.getWorldPosition().get(world), tf, idf, rank));
             }
 
         }
+
+        invertCache = tmpInvertCache;
+        worldInfoCache = tmpWorldInfoCache;
 
 
     }

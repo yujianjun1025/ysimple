@@ -12,7 +12,7 @@
             <pattern>%5p %d{yyyy-MM-dd HH:mm:ss} %c %L Line - %m %n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
+            <level>ERROR</level>
         </filter>
     </appender>
 
@@ -26,12 +26,12 @@
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <!--<level>INFO</level>-->
-            <level>DEBUG</level>
+            <level>INFO</level>
         </filter>
     </appender>
 
 
-    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender" additivity="false">
         <encoder>
             <pattern>[%d{yyyy-MM-dd HH:mm:ss} %5p %c:%L] %m%n</pattern>
         </encoder>
