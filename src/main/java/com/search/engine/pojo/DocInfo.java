@@ -9,8 +9,8 @@ import com.google.common.collect.Multimap;
  */
 public class DocInfo {
 
-    private Integer docId;
-    private Integer worldCount;
+    private int docId;
+    private int worldCount;
     private Multimap<String, Integer> worldPosition = ArrayListMultimap.create();
 
     public DocInfo(Integer docId, Integer worldCount, Multimap<String, Integer> worldPosition) {
@@ -52,5 +52,6 @@ public class DocInfo {
                 ", worldCount=" + worldCount +
                 ", worldPosition=" + Joiner.on(",").withKeyValueSeparator("=>").join(worldPosition.entries()) +
                 '}';
+
     }
 }

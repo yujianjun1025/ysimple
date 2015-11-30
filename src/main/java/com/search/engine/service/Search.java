@@ -42,6 +42,8 @@ public class Search {
         }
 
         List<List<Integer>> allDocId = Lists.newArrayList();
+
+        long begin = System.nanoTime();
         for (int i = 0; i < string.length(); i++) {
 
             List<Integer> tmp = (List<Integer>) invertCache1.getInvertCache().get(String.valueOf(string.charAt(i)));
@@ -49,8 +51,12 @@ public class Search {
             if (CollectionUtils.isEmpty(tmp)) {
                 continue;
             }
+
             allDocId.add(tmp);
         }
+
+        long end = System.nanoTime();
+        logger.info("得到所有的docId耗时:{}毫秒", new Object[]{(end - begin) * 1.0 / 1000000});
 
         return SortUtil.merge(allDocId);
     }

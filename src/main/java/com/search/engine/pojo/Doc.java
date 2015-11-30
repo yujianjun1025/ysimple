@@ -9,13 +9,13 @@ import java.util.List;
  */
 public class Doc {
 
-    private Integer docId;
+    private int docId;
     private String value;
 
 
     public Doc(Integer docId, String value) {
         this.docId = docId;
-        this.value = value;
+        this.value = value.intern();
     }
 
 

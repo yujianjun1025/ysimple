@@ -15,6 +15,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by yjj on 15/11/22.
@@ -27,16 +28,25 @@ public class ForwardCache {
 
     private static String FILE_NAME = "/Users/yjj/m/search_engine/src/main/resources/search_data.txt";
 
-
+    private static int ARRAY_SIZE = 1000;
     //docId, List<WordInfo>
-    private List<DocInfo> forwardCache = Lists.newArrayList();
+    private List<DocInfo>[] forwardCache = new List[ARRAY_SIZE];
+
     private long lastModified = 0;
 
     @Resource
     private InvertCache1 invertCache1;
 
+    AtomicInteger atomicInteger = new AtomicInteger(0);
+
     @PostConstruct
     private void init() {
+
+        for (int i = 0; i < ARRAY_SIZE; i++) {
+
+            forwardCache[i] = Lists.newArrayList();
+        }
+
 
         new Thread(new Runnable() {
             public void run() {
@@ -48,12 +58,17 @@ public class ForwardCache {
                     if (tmpVersion > lastModified) {
 
                         long begin = System.currentTimeMillis();
+                        logger.info("准备加载新文件");
                         produceForward(FILE_NAME);
+                        long end = System.currentTimeMillis();
+                        logger.info("生成正排完成, 耗时{}", end  - begin);
+                        begin = end;
                         invertCache1.buildInvert(forwardCache);
                         lastModified = tmpVersion;
-                        logger.info("加载文件:{}成功,版本号:{}, 耗时:{}", new Object[]{FILE_NAME, lastModified, System.currentTimeMillis() - begin});
+                        logger.info("正排生成倒排耗时:{}", new Object[]{System.currentTimeMillis() - begin,atomicInteger});
                     }
 
+                   // invertCache1.print();
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -63,11 +78,10 @@ public class ForwardCache {
 
             }
         }).start();
+
+
     }
 
-    public List<DocInfo> getForwardCache() {
-        return forwardCache;
-    }
 
     public void produceForward(String fileName) {
 
@@ -77,21 +91,35 @@ public class ForwardCache {
             List<String> splitWorld = doc.split();
             Multimap<String, Integer> worldPosition = ArrayListMultimap.create();
             DocInfo docInfo = new DocInfo(doc.getDocId(), splitWorld.size(), worldPosition);
-            forwardCache.add(docInfo);
+            forwardCache[doc.getDocId() % ARRAY_SIZE].add(docInfo);
 
             Integer pos = 0;
             for (String world : splitWorld) {
-                worldPosition.put(world, pos);
+                worldPosition.put(world.intern(), pos);
                 pos++;
             }
         }
 
     }
 
+    private void print() {
+
+        for (int i = 0; i < ARRAY_SIZE; i++) {
+            logger.error(Joiner.on("\n").join(forwardCache));
+        }
+
+    }
 
     @Override
     public String toString() {
-        return "ForwardCache{\n" + Joiner.on("\n").join(forwardCache) +
+
+
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < ARRAY_SIZE; i++) {
+            stringBuilder.append(Joiner.on("\n").join(forwardCache)).append("\n");
+        }
+
+        return "ForwardCache{\n" + stringBuilder +
                 "\n}";
     }
 

@@ -1,11 +1,14 @@
 package com.search.engine.util;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
 import com.search.engine.pojo.Doc;
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Collections;
@@ -17,44 +20,51 @@ import java.util.List;
  */
 public class SortUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(SortUtil.class);
+
     //taat term at a time
     //left , right 必须是已经排序好的链表, 得到docId的并集
-    public static List<Integer> merge(List<Integer> left, List<Integer> right) {
+    public static List<Integer> merge(List<Integer> up, List<Integer> down) {
 
         List<Integer> result = Lists.newArrayList();
-        if (CollectionUtils.isEmpty(left) || CollectionUtils.isEmpty(right)) {
+        if (CollectionUtils.isEmpty(up) || CollectionUtils.isEmpty(down)) {
             return result;
         }
 
 
         Integer p1 = 0, p2 = 0;
-
+        int upSize = up.size(), downSize = down.size();
         do {
 
-            p2 = Collections.binarySearch(right, left.get(0));
-            if (p2 >= 0) {
-                p1 = 0;
+            int tmp = Ints.compare(up.get(p1), down.get(p2));
+
+            if (tmp == 0) {
+                result.add(up.get(p1));
+                p1++;
+                p2++;
+            } else if (tmp < 0) {
+                p1 = Collections.binarySearch(up, down.get(p2));
+                p1 = p1 >= 0 ? p1 : Math.abs(p1 + 1);
+                if (p1 >= upSize) {
+                    return result;
+                }
+                break;
+            } else {
+                p2 = Collections.binarySearch(down, up.get(p1));
+                p2 = p2 >= 0 ? p2 : Math.abs(p2 + 1);
+                if (p2 >= downSize) {
+                    return result;
+                }
                 break;
             }
 
-            p1 = Collections.binarySearch(left, right.get(0));
-            if (p1 >= 0) {
-                p2 = 0;
-                break;
-            }
-
-            return result;
-
-        } while (false);
+        } while (p1 < upSize && p2 < downSize);
 
 
-        int leftSize = left.size(), rightSize = right.size();
-        do {
+        while (!(Ints.compare(p1, upSize) == 0) && !(Ints.compare(p2, downSize) == 0)) {
 
-            int leftValue = left.get(p1);
-            int rightValue = right.get(p2);
-
-            int compares = Ints.compare(leftValue, rightValue);
+            int leftValue = up.get(p1);
+            int compares = Ints.compare(leftValue, down.get(p2));
             if (compares == 0) {
                 result.add(leftValue);
                 p1++;
@@ -65,7 +75,8 @@ public class SortUtil {
                 p2++;
             }
 
-        } while (!(Ints.compare(p1, leftSize) == 0) && !(Ints.compare(p2, rightSize) == 0));
+        }
+
 
         return result;
     }
@@ -73,6 +84,7 @@ public class SortUtil {
     //得到所有的docId并集
     public static List<Integer> merge(List<List<Integer>> nodeForwardLists) {
 
+        long begin = System.nanoTime();
         if (CollectionUtils.isEmpty(nodeForwardLists)) {
             return Lists.newArrayList();
         }
@@ -92,6 +104,10 @@ public class SortUtil {
         for (int i = 1; i < size; i++) {
             mergedDocIds = merge(mergedDocIds, nodeForwardLists.get(i));
         }
+
+        long end = System.nanoTime();
+        logger.info("求交耗时:{}毫秒", new Object[]{(end - begin) * 1.0 / 1000000});
+
 
         return mergedDocIds;
     }
@@ -160,46 +176,14 @@ public class SortUtil {
 
 
     public static void main(String[] args) {
-        List<String> stringList = Lists.newArrayList("ab", "aba", "abcd", "ababcab", "abcdabd", "aa", "abacacab", "abx", "");
 
-        String src = "abbbcabacdababacdabcdaabdeabx";
-
-        for (String target : stringList) {
-
-            int[] next = getNext(target);
-            StringBuffer buffer1 = new StringBuffer();
-            StringBuffer buffer2 = new StringBuffer();
-            for (int i = 0; i < target.length(); i++) {
-                buffer1.append(target.charAt(i)).append(" ");
-                buffer2.append(next[i]).append(" ");
-            }
-
-            System.out.println(buffer1);
-            System.out.println(buffer2);
+        List<Integer> integers2 = Lists.newArrayList(46, 194, 209, 261, 262, 265, 348, 356, 410, 417, 437, 461, 557, 610, 657, 697, 977, 988, 1015, 1019, 999992, 999993, 999994, 999995, 999996, 999997, 999998, 999999);
+        List<Integer> integers1 = Lists.newArrayList(1292, 2498, 2932, 54403, 54576, 999995, 999996, 999997, 999998, 999999);
 
 
-            int i = 0, j = 0;
-            while (i < src.length() && j < target.length()) {
-                if (src.charAt(i) == target.charAt(j)) {
-                    i++;
-                    j++;
-                    continue;
-                } else if (j == 0) {
-                    i++;
-                } else {
-                    j = next[j - 1];
-                }
+        List<Integer> res = merge(integers1, integers2);
 
-            }
-
-            if (j == target.length()) {
-                System.out.println("contain: " + src.substring(i - j, i - j + target.length()));
-            } else {
-                System.out.println("didn't contain");
-            }
-
-        }
-
+        System.out.println("merge 结果:" + Joiner.on(" ").join(res).toString());
 
     }
 

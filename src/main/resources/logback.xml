@@ -1,51 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-
-    <property name="log.base" value="/Users/yjj/m/log"/>
-
-    <appender name="errorlog" class="ch.qos.logback.core.rolling.RollingFileAppender" additivity="false">
-        <File>${log.base}/error.log</File>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.base}/error.log.%d{yyyy-MM-dd'.log'}</fileNamePattern>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%5p %d{yyyy-MM-dd HH:mm:ss} %c %L Line - %m %n</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>ERROR</level>
-        </filter>
-    </appender>
-
-    <appender name="stdlog" class="ch.qos.logback.core.rolling.RollingFileAppender" additivity="false">
-        <File>${log.base}/std.log</File>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.base}/std.log.%d{yyyy-MM-dd'.log'}</fileNamePattern>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%5p %d{yyyy-MM-dd HH:mm:ss} %c %L Line - %m %n</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <!--<level>INFO</level>-->
-            <level>INFO</level>
-        </filter>
-    </appender>
-
-
+<configuration scan="false" scanPeriod="60 seconds" debug="false">
+    <!-- 日志文件输出路径 -->
+    <property name="fileDir" value="/Users/yjj/m/log/"/>
+    <!-- 日志内容格式，可根据日志格式进行调整 -->
+    <property name="patternLayout" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%-5level]&lt;logger:%L %M&gt;%msg%n"/>
+    <!-- 输出到控制台 -->
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender" additivity="false">
         <encoder>
-            <pattern>[%d{yyyy-MM-dd HH:mm:ss} %5p %c:%L] %m%n</pattern>
+            <pattern>${patternLayout}</pattern>
         </encoder>
     </appender>
-
-
-    <logger name="com.travel.search" level="DEBUG">
-        <appender-ref ref="stdlog"/>
-        <appender-ref ref="errorlog"/>
-    </logger>
-
-
-    <root level="DEBUG">
-        <appender-ref ref="console"/>
+    <!-- 输出到文件 -->
+    <appender name="error" class="ch.qos.logback.core.rolling.RollingFileAppender" additivity="false">
+        <!--过滤器只输出此级别的日志 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${fileDir}error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${fileDir}datamanager.log.%d{yyyy-MM-dd}</FileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${patternLayout}</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+    <appender name="info" class="ch.qos.logback.core.rolling.RollingFileAppender" additivity="false">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${fileDir}info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${fileDir}datamanager.log.%d{yyyy-MM-dd}</FileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${patternLayout}</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+    <appender name="debug" class="ch.qos.logback.core.rolling.RollingFileAppender" additivity="false">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${fileDir}debug.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${fileDir}datamanager.log.%d{yyyy-MM-dd}</FileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${patternLayout}</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+    <!-- 程序日志输出到文件中 -->
+    <root level="debug">
+        <appender-ref ref="error"/>
+        <appender-ref ref="info"/>
+        <appender-ref ref="debug"/>
     </root>
-
 </configuration>
