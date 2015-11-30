@@ -8,13 +8,17 @@ import com.search.engine.pojo.WordInfo;
 import com.search.engine.util.SortUtil;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by yjj on 15/11/22.
  */
 
-@Component
 public class InvertCache1 {
 
 
@@ -22,15 +26,27 @@ public class InvertCache1 {
     private Map<Integer, Map<String, WordInfo>> worldInfoCache = Maps.newHashMap();
 
 
+    public InvertCache1() {
+
+        ForwardCache forwardCache = new ForwardCache();
+        buildInvert(forwardCache.getForwardCache());
+
+    }
+
     public Multimap<String, Integer> getInvertCache() {
+
+
         return invertCache;
     }
 
     public Map<Integer, Map<String, WordInfo>> getWorldInfoCache() {
+
+
         return worldInfoCache;
     }
 
     public void buildInvert(List<DocInfo> forwardCache) {
+
 
         for (DocInfo docInfo : forwardCache) {
             for (String world : docInfo.getWorldPosition().keys()) {
@@ -65,6 +81,7 @@ public class InvertCache1 {
 
         }
 
+
     }
 
     @Override
@@ -87,120 +104,5 @@ public class InvertCache1 {
                 '}';
     }
 
-
-    public List<Integer> getDocIds(String string) {
-
-        if (string == null || string.length() == 0) {
-            return Lists.newArrayList();
-        }
-
-        List<List<Integer>> allDocId = Lists.newArrayList();
-        for (int i = 0; i < string.length(); i++) {
-            allDocId.add((List<Integer>) invertCache.get(String.valueOf(string.charAt(i))));
-        }
-
-        return SortUtil.merge(allDocId);
-    }
-
-
-    public List<Integer> filterDocId(List<Integer> docIds, String string) {
-
-        List<Integer> res = Lists.newArrayList();
-
-        for (Integer docId : docIds) {
-
-            Integer pos = 0;
-            List<MergeNode> mergeNodes = Lists.newArrayList();
-
-            for (Character character : string.toCharArray()) {
-                WordInfo wordInfo = worldInfoCache.get(docId).get(String.valueOf(character));
-                mergeNodes.add(new MergeNode(pos++, wordInfo.getPosList()));
-            }
-
-            Collections.sort(mergeNodes, new Comparator<MergeNode>() {
-                public int compare(MergeNode o1, MergeNode o2) {
-                    return o1.getPosList().size() - o2.getPosList().size();
-                }
-            });
-
-
-            int lastOrder = mergeNodes.get(0).getOrder();
-            for (MergeNode mergeNode : mergeNodes) {
-                int offset = mergeNode.getOrder() - lastOrder;
-                mergeNode.setOffset(offset);
-                lastOrder = mergeNode.getOrder();
-
-            }
-            for (int k = 0; k < mergeNodes.get(0).getPosList().size(); k++) {
-
-                boolean flag = true;
-                int i = mergeNodes.get(0).getPosList().get(k);
-                for (int j = 1; j < mergeNodes.size(); j++) {
-                    int index = Collections.binarySearch(mergeNodes.get(j).getPosList(), i + j);
-                    if (index < 0) {
-                        flag = false;
-                        break;
-                    }
-                }
-
-                if (flag) {
-                    res.add(docId);
-                    break;
-                }
-            }
-        }
-
-        return res;
-    }
-
-    public List<Integer> getTopN(List<Integer> docIds, String string, int topN) {
-
-        Ordering<List<WordInfo>> ordering = new Ordering<List<WordInfo>>() {
-            @Override
-            public int compare(List<WordInfo> left, List<WordInfo> right) {
-
-                for (int i = 0; i < left.size(); i++) {
-                    int res = Double.compare(left.get(i).getRank(), right.get(i).getRank());
-                    if (res != 0) {
-                        return res;
-                    }
-                }
-
-                return 0;
-            }
-        };
-
-        List<Integer> integers = Lists.newArrayList();
-        List<List<WordInfo>> res = Lists.newArrayList();
-
-        //List<WordInfo>[] res = new ArrayList<WordInfo>[100];
-        for (Integer docId : docIds) {
-
-            List<WordInfo> wordInfoList = Lists.newArrayList();
-            for (Character world : string.toCharArray()) {
-                wordInfoList.add(worldInfoCache.get(docId).get(String.valueOf(world)));
-            }
-
-            if (ordering.compare(wordInfoList, res.get(0)) <= 0) {
-                continue;
-            }
-
-            int index = ordering.binarySearch(res, wordInfoList);
-            res.set(index, wordInfoList);
-            res.remove(0);
-            integers.set(index, docId);
-            integers.remove(0);
-        }
-
-
-        return integers;
-    }
-
-    public void search(String string) {
-
-        List<Integer> docIds = getDocIds(string);
-        List<Integer> res = filterDocId(docIds, string);
-        System.out.println("contain " + string + " docIds:" + Joiner.on(" ").join(res));
-    }
 
 }

@@ -16,7 +16,6 @@ import java.util.Map;
 /**
  * Created by yjj on 15/11/29.
  */
-@Component
 public class InvertCache2 {
 
 

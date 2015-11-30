@@ -7,19 +7,43 @@ import com.google.common.collect.Multimap;
 import com.search.engine.pojo.Doc;
 import com.search.engine.pojo.DocInfo;
 import com.search.engine.util.SortUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
  * Created by yjj on 15/11/22.
  */
 
-@Component
 public class ForwardCache {
+
+    private static final Logger logger = LoggerFactory.getLogger(ForwardCache.class);
+
 
     //docId, List<WordInfo>
     private List<DocInfo> forwardCache = Lists.newArrayList();
+
+    private InvertCache1 invertCache1;
+
+    public ForwardCache() {
+
+
+        try {
+
+            produceForward("/Users/yjj/m/search_engine/src/main/resources/search_data.txt");
+
+        } catch (Exception e) {
+
+            logger.error("加载文件失败", e);
+            e.printStackTrace();
+        }
+
+
+    }
+
 
     public List<DocInfo> getForwardCache() {
         return forwardCache;
@@ -50,7 +74,6 @@ public class ForwardCache {
         return "ForwardCache{\n" + Joiner.on("\n").join(forwardCache) +
                 "\n}";
     }
-
 
 
 }
