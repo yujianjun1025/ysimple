@@ -158,10 +158,9 @@ public class Search {
         begin = end;
 
 
-        List<List<Integer>> partions = Lists.partition(docIds, 100);
-
-        final List<Integer> res = filterDocId(docIds, string);
         final Object object = new Object();
+        List<List<Integer>> partions = Lists.partition(docIds, 100);
+        final List<Integer> res = Lists.newArrayList();
         final CountDownLatch countDownLatch = new CountDownLatch(partions.size());
         for (final List<Integer> integers : partions) {
 
