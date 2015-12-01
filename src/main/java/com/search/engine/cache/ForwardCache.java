@@ -1,20 +1,27 @@
 package com.search.engine.cache;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.io.Closer;
 import com.search.engine.pojo.Doc;
 import com.search.engine.pojo.DocInfo;
 import com.search.engine.util.SortUtil;
+import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.io.File;
+import java.io.*;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -28,24 +35,14 @@ public class ForwardCache {
 
     private static String FILE_NAME = "/Users/yjj/m/search_engine/src/main/resources/search_data.txt";
 
-    private static int ARRAY_SIZE = 1000;
-    //docId, List<WordInfo>
-    private List<DocInfo>[] forwardCache = new List[ARRAY_SIZE];
-
     private long lastModified = 0;
 
     @Resource
     private InvertCache1 invertCache1;
 
-    AtomicInteger atomicInteger = new AtomicInteger(0);
 
     @PostConstruct
     private void init() {
-
-        for (int i = 0; i < ARRAY_SIZE; i++) {
-
-            forwardCache[i] = Lists.newArrayList();
-        }
 
 
         new Thread(new Runnable() {
@@ -56,19 +53,10 @@ public class ForwardCache {
                     File file = new File(FILE_NAME);
                     long tmpVersion = file.lastModified();
                     if (tmpVersion > lastModified) {
-
-                        long begin = System.currentTimeMillis();
-                        logger.info("准备加载新文件");
                         produceForward(FILE_NAME);
-                        long end = System.currentTimeMillis();
-                        logger.info("生成正排完成, 耗时{}", end  - begin);
-                        begin = end;
-                        invertCache1.buildInvert(forwardCache);
                         lastModified = tmpVersion;
-                        logger.info("正排生成倒排耗时:{}", new Object[]{System.currentTimeMillis() - begin,atomicInteger});
                     }
 
-                   // invertCache1.print();
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -79,48 +67,56 @@ public class ForwardCache {
             }
         }).start();
 
-
     }
 
 
     public void produceForward(String fileName) {
 
-        List<Doc> docList = SortUtil.fileToDoc(fileName);
 
-        for (Doc doc : docList) {
-            List<String> splitWorld = doc.split();
-            Multimap<String, Integer> worldPosition = ArrayListMultimap.create();
-            DocInfo docInfo = new DocInfo(doc.getDocId(), splitWorld.size(), worldPosition);
-            forwardCache[doc.getDocId() % ARRAY_SIZE].add(docInfo);
+        BufferedReader bufferedReader = null;
+        try {
 
-            Integer pos = 0;
-            for (String world : splitWorld) {
-                worldPosition.put(world.intern(), pos);
-                pos++;
+            Integer docId = 1;
+            bufferedReader = new BufferedReader(new FileReader(new File(fileName)));
+            String tmpStr = null;
+            while ((tmpStr = bufferedReader.readLine()) != null) {
+
+                tmpStr = tmpStr.trim();
+                if (tmpStr.length() == 0) {
+                    continue;
+                }
+
+                Doc doc = new Doc(docId++, tmpStr);
+                List<String> splitWorld = doc.split();
+                Integer pos = 0;
+                Multimap<String, Integer> worldPosition = ArrayListMultimap.create();
+                for (String world : splitWorld) {
+                    worldPosition.put(world.intern(), pos);
+                    pos++;
+                }
+
+                DocInfo docInfo = new DocInfo(doc.getDocId(), splitWorld.size(), worldPosition);
+                invertCache1.addDocInfo(docInfo);
             }
+
+        } catch (Exception e) {
+            logger.error("读取文件出现异常{}", e);
+        } finally {
+
+            try {
+                bufferedReader.close();
+            } catch (Exception e) {
+                logger.error("关闭bufferedReader时出现异常", e);
+            }
+
         }
 
-    }
+        logger.info("开始计算rank值");
+        long begin = System.currentTimeMillis();
+        invertCache1.calculateRank();
 
-    private void print() {
+        logger.info("计算rerank值耗时{}", System.currentTimeMillis() - begin);
 
-        for (int i = 0; i < ARRAY_SIZE; i++) {
-            logger.error(Joiner.on("\n").join(forwardCache));
-        }
-
-    }
-
-    @Override
-    public String toString() {
-
-
-        StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < ARRAY_SIZE; i++) {
-            stringBuilder.append(Joiner.on("\n").join(forwardCache)).append("\n");
-        }
-
-        return "ForwardCache{\n" + stringBuilder +
-                "\n}";
     }
 
 

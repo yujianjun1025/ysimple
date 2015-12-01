@@ -11,6 +11,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import sun.security.util.BitArray;
 
 import javax.annotation.Resource;
 import java.util.Collections;
@@ -46,7 +47,7 @@ public class Search {
         long begin = System.nanoTime();
         for (int i = 0; i < string.length(); i++) {
 
-            List<Integer> tmp = (List<Integer>) invertCache1.getInvertCache().get(String.valueOf(string.charAt(i)));
+            List<Integer> tmp = (List<Integer>) invertCache1.getInvertCache().get(invertCache1.getStringCode(String.valueOf(string.charAt(i))));
 
             if (CollectionUtils.isEmpty(tmp)) {
                 continue;
@@ -72,12 +73,21 @@ public class Search {
             List<MergeNode> mergeNodes = Lists.newArrayList();
 
             for (Character character : string.toCharArray()) {
-                WordInfo wordInfo = invertCache1.getWorldInfoCache().get(docId).get(String.valueOf(character));
-                mergeNodes.add(new MergeNode(pos++, wordInfo.getPosList()));
+
+
+                List<WordInfo> wordInfoList = invertCache1.getWorldInfoCache().get(docId);
+                int index = Collections.binarySearch(wordInfoList, invertCache1.getStringCode(String.valueOf(character)));
+                if (index > 0) {
+                    WordInfo wordInfo = wordInfoList.get(index);
+                    mergeNodes.add(new MergeNode(pos++, SortUtil.bitArrayToList(wordInfo.getPosList())));
+                }
+
             }
 
             Collections.sort(mergeNodes, new Comparator<MergeNode>() {
                 public int compare(MergeNode o1, MergeNode o2) {
+
+
                     return o1.getPosList().size() - o2.getPosList().size();
                 }
             });
@@ -137,7 +147,7 @@ public class Search {
 
             List<WordInfo> wordInfoList = Lists.newArrayList();
             for (Character world : string.toCharArray()) {
-                wordInfoList.add(invertCache1.getWorldInfoCache().get(docId).get(String.valueOf(world)));
+                // wordInfoList.add(invertCache1.getWorldInfoCache().get(docId).get(String.valueOf(world)));
             }
 
             if (ordering.compare(wordInfoList, res.get(0)) <= 0) {

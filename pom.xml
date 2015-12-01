@@ -199,6 +199,14 @@
                 <artifactId>druid</artifactId>
                 <version>1.0.16</version>
             </dependency>
+
+
+            <dependency>
+                <groupId>com.esotericsoftware.kryo</groupId>
+                <artifactId>kryo</artifactId>
+                <version>2.24.0</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -315,6 +323,10 @@
             <artifactId>druid</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.esotericsoftware.kryo</groupId>
+            <artifactId>kryo</artifactId>
+        </dependency>
     </dependencies>
 
     <profiles>

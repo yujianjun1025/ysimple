@@ -9,6 +9,7 @@ import com.search.engine.pojo.Doc;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.security.util.BitArray;
 
 import java.io.File;
 import java.util.Collections;
@@ -112,29 +113,6 @@ public class SortUtil {
         return mergedDocIds;
     }
 
-    public static List<Doc> fileToDoc(String fileName) {
-
-        List<Doc> allContent = Lists.newArrayList();
-
-        try {
-
-            Integer docId = 1;
-            for (String content : Files.readLines(new File(fileName), Charsets.UTF_8)) {
-                content = content.trim();
-                if (content.length() == 0) {
-                    continue;
-                }
-                allContent.add(new Doc(docId++, content));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return allContent;
-    }
-
-
     public static int[] getNext(String string) {
 
         int size = string.length();
@@ -174,6 +152,20 @@ public class SortUtil {
 
     }
 
+
+    public static List<Integer> bitArrayToList(BitArray bitArray) {
+
+
+        List<Integer> res = Lists.newArrayList();
+        for (int i = 0; i < bitArray.length(); i++) {
+
+            if (bitArray.get(i)) {
+                res.add(i);
+            }
+        }
+
+        return res;
+    }
 
     public static void main(String[] args) {
 
