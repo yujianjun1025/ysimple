@@ -74,7 +74,6 @@ public class Search {
 
             for (Character character : string.toCharArray()) {
 
-
                 List<WordInfo> wordInfoList = invertCache1.getWorldInfoCache().get(docId);
                 int index = Collections.binarySearch(wordInfoList, invertCache1.getStringCode(String.valueOf(character)));
                 if (index > 0) {
@@ -86,8 +85,6 @@ public class Search {
 
             Collections.sort(mergeNodes, new Comparator<MergeNode>() {
                 public int compare(MergeNode o1, MergeNode o2) {
-
-
                     return o1.getPosList().size() - o2.getPosList().size();
                 }
             });
@@ -100,6 +97,11 @@ public class Search {
                 lastOrder = mergeNode.getOrder();
 
             }
+
+            if (mergeNodes.size() <= 1) {
+                continue;
+            }
+
             for (int k = 0; k < mergeNodes.get(0).getPosList().size(); k++) {
 
                 boolean flag = true;

@@ -1,5 +1,6 @@
 package com.search.engine.pojo;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -40,5 +41,14 @@ public class MergeNode {
 
     public void setOffset(int offset) {
         this.offset = offset;
+    }
+
+    @Override
+    public String toString() {
+        return "MergeNode{" +
+                "order=" + order +
+                ", offset=" + offset +
+                ", posList=" + Joiner.on(" ").join(posList) +
+                '}';
     }
 }
