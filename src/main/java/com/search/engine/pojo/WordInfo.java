@@ -1,12 +1,7 @@
 package com.search.engine.pojo;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import sun.security.util.BitArray;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Created by yjj on 15/11/29.
@@ -14,7 +9,7 @@ import java.util.List;
 public class WordInfo implements Comparable<Integer> {
 
     private int wordNum;
-    private BitArray posList = new BitArray(128);
+    private BitArray posList = new BitArray(64);
     private int tf;
     private int rank;
 
@@ -22,10 +17,6 @@ public class WordInfo implements Comparable<Integer> {
 
         this.wordNum = wordNum;
 
-    }
-
-    public void setWordNum(int wordNum) {
-        this.wordNum = wordNum;
     }
 
     public BitArray getPosList() {
@@ -43,7 +34,6 @@ public class WordInfo implements Comparable<Integer> {
     public void setTf(int tf) {
         this.tf = tf;
     }
-
 
     public int getRank() {
         return rank;
@@ -68,5 +58,9 @@ public class WordInfo implements Comparable<Integer> {
 
     public int getWordNum() {
         return wordNum;
+    }
+
+    public void setWordNum(int wordNum) {
+        this.wordNum = wordNum;
     }
 }

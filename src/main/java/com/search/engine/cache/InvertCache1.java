@@ -1,50 +1,71 @@
 package com.search.engine.cache;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoSerializable;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.google.common.base.Joiner;
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.search.engine.pojo.DocInfo;
 import com.search.engine.pojo.WordInfo;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by yjj on 15/11/22.
  */
 
-@Component
-public class InvertCache1 {
+public class InvertCache1 implements KryoSerializable {
 
 
     private static final Logger logger = LoggerFactory.getLogger(InvertCache1.class);
-
-    private Multimap<Integer, Integer> invertCache = ArrayListMultimap.create();
+    private static Integer docCount = 0;
+    private Map<Integer, List<Integer>> invertCache = Maps.newHashMap();
     private Map<Integer, List<WordInfo>> worldInfoCache = Maps.newHashMap();
+    private Map<Integer, List<Integer>> tmpInvertCache = Maps.newHashMap();
+    private Map<Integer, List<WordInfo>> tmpWorldInfoCache = Maps.newHashMap();
+    private int ALLWORLDCOUNT = 0;
+    private Map<String, Integer> str2int = Maps.newHashMap();
+
+    public static InvertCache1 getInstance() {
+        return InvertCacheHolder.instance;
+    }
 
     public Map<Integer, List<WordInfo>> getWorldInfoCache() {
         return worldInfoCache;
     }
 
-    public Multimap<Integer, Integer> getInvertCache() {
-        return invertCache;
+    public void write(Kryo kryo, Output output) {
+
+        int invertCacheSize = tmpInvertCache.size();
+        output.writeInt(invertCacheSize);
+        for (int i = 0; i < invertCacheSize; i++) {
+
+            List<Integer> integers = tmpInvertCache.get(i);
+            int docIdSize = integers.size();
+            output.writeInt(docIdSize);
+
+            for (Integer integer : integers) {
+                output.writeInt(integer);
+            }
+        }
     }
 
+    public void read(Kryo kryo, Input input) {
 
-    private Multimap<Integer, Integer> tmpInvertCache = ArrayListMultimap.create();
-    private Map<Integer, List<WordInfo>> tmpWorldInfoCache = Maps.newHashMap();
-    private static Integer docCount = 0;
+    }
 
-    private int ALLWORLDCOUNT = 0;
-    private Map<String, Integer> str2int = Maps.newHashMap();
+    public Integer getStringCode(Character character) {
 
-    public Integer getStringCode(String world){
-
-        Integer res = str2int.get(world);
-
-        return  res != null ? res : -1;
+        Integer res = str2int.get(String.valueOf(character));
+        return res != null ? res : -1;
 
     }
 
@@ -65,7 +86,13 @@ public class InvertCache1 {
 
             List<Integer> docIds = (List<Integer>) tmpInvertCache.get(worldNum);
             if (CollectionUtils.isEmpty(docIds)) {
-                tmpInvertCache.put(worldNum, docInfo.getDocId());
+
+                List<Integer> docIdList = tmpInvertCache.get(worldNum);
+                if (docIdList == null) {
+                    docIdList = Lists.newArrayList();
+                    tmpInvertCache.put(worldNum, docIdList);
+                }
+                docIdList.add(docInfo.getDocId());
                 continue;
             }
 
@@ -123,7 +150,7 @@ public class InvertCache1 {
     public String toString() {
 
         StringBuilder invert = new StringBuilder("\n");
-        for (Map.Entry<Integer, Collection<Integer>> entry : invertCache.asMap().entrySet()) {
+        for (Map.Entry<Integer, List<Integer>> entry : invertCache.entrySet()) {
             invert.append(entry.getKey()).append(":").append(Joiner.on(",").join(entry.getValue())).append("\n");
         }
 
@@ -136,6 +163,18 @@ public class InvertCache1 {
                 + invert
                 + "worldInfoCache=" + worldInfo +
                 '}';
+    }
+
+    public List<Integer> getDocIdByStringNum(Integer stringNum) {
+        return invertCache.get(stringNum);
+    }
+
+    public Map<Integer, List<Integer>> getInvertCache() {
+        return invertCache;
+    }
+
+    public static final class InvertCacheHolder {
+        private static final InvertCache1 instance = new InvertCache1();
     }
 
 

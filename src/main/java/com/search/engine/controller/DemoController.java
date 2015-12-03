@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,8 +18,7 @@ public class DemoController {
     private static final Logger logger = LoggerFactory.getLogger(DemoController.class);
 
 
-    @Resource
-    private Search search;
+    private Search search = Search.getInstance();
 
     @RequestMapping("test.json")
     @ResponseBody

@@ -1,71 +1,74 @@
 package com.search.engine.cache;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.io.Closer;
 import com.search.engine.pojo.Doc;
 import com.search.engine.pojo.DocInfo;
-import com.search.engine.util.SortUtil;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.io.*;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by yjj on 15/11/22.
  */
 
-@Component
+
+@Service
 public class ForwardCache {
 
     private static final Logger logger = LoggerFactory.getLogger(ForwardCache.class);
 
     private static String FILE_NAME = "/Users/yjj/m/search_engine/src/main/resources/search_data.txt";
 
+    private static String serialize_file = "/Users/yjj/m/log/".concat(String.valueOf(System.currentTimeMillis()).concat(".ivt"));
+    private static int flag = 0;
     private long lastModified = 0;
-
-    @Resource
-    private InvertCache1 invertCache1;
-
+    private InvertCache1 invertCache1 = InvertCache1.getInstance();
 
     @PostConstruct
     private void init() {
 
+        synchronized (ForwardCache.class) {
 
-        new Thread(new Runnable() {
-            public void run() {
+            logger.info("进入同步块,线程ID {}", Thread.currentThread().getId());
+            if (flag == 0) {
+                logger.info("flag == 0 执行初始化任务,线程ID {}", Thread.currentThread().getId());
+                flag = 1;
+                new Thread(new Runnable() {
+                    public void run() {
 
-                while (true) {
+                        while (true) {
 
-                    File file = new File(FILE_NAME);
-                    long tmpVersion = file.lastModified();
-                    if (tmpVersion > lastModified) {
-                        produceForward(FILE_NAME);
-                        lastModified = tmpVersion;
+                            File file = new File(FILE_NAME);
+                            long tmpVersion = file.lastModified();
+                            if (tmpVersion > lastModified) {
+                                produceForward(FILE_NAME);
+                                lastModified = tmpVersion;
+                            }
+
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                logger.error("线程休眠出现异常", e);
+                            }
+                        }
+
                     }
-
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        logger.error("线程休眠出现异常", e);
-                    }
-                }
-
+                }).start();
+            } else {
+                logger.info("flag == 1 不执行初始化任务,线程ID {}", Thread.currentThread().getId());
             }
-        }).start();
+
+            logger.info("退出同步块,线程ID {}", Thread.currentThread().getId());
+
+        }
 
     }
 
@@ -115,7 +118,32 @@ public class ForwardCache {
         long begin = System.currentTimeMillis();
         invertCache1.calculateRank();
 
-        logger.info("计算rerank值耗时{}", System.currentTimeMillis() - begin);
+        long end = System.currentTimeMillis();
+        logger.info("计算rerank值耗时{}", end - begin);
+        begin = end;
+
+        logger.info("开始序列化倒排");
+        serialize(serialize_file);
+        logger.info("序列化耗时{}", System.currentTimeMillis() - begin);
+    }
+
+    public void serialize(String fileName) {
+
+        try {
+
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
+            Output output = new Output(oos);
+            Kryo kryo = new Kryo();
+            kryo.setReferences(false);
+            kryo.setRegistrationRequired(false);
+            kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
+            kryo.register(InvertCache1.class);
+            invertCache1.write(kryo, output);
+
+        } catch (Exception e) {
+            logger.error("倒排序列化出现异常", e);
+        }
+
 
     }
 

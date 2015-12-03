@@ -10,10 +10,7 @@ import com.search.engine.util.SortUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import sun.security.util.BitArray;
 
-import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -25,16 +22,21 @@ import java.util.concurrent.Executors;
  * Created by yjj on 15/11/29.
  */
 
-@Component
 public class Search {
 
     private static final Logger logger = LoggerFactory.getLogger(Search.class);
 
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
+    private InvertCache1 invertCache1 = InvertCache1.getInstance();
 
-    @Resource
-    private InvertCache1 invertCache1;
+
+    private Search() {
+    }
+
+    public static Search getInstance() {
+        return SearchHolder.instance;
+    }
 
     public List<Integer> getDocIds(String string) {
 
@@ -45,14 +47,19 @@ public class Search {
         List<List<Integer>> allDocId = Lists.newArrayList();
 
         long begin = System.nanoTime();
-        for (int i = 0; i < string.length(); i++) {
 
-            List<Integer> tmp = (List<Integer>) invertCache1.getInvertCache().get(invertCache1.getStringCode(String.valueOf(string.charAt(i))));
+        for (Character character : string.toCharArray()) {
+
+            Integer stringCode = invertCache1.getStringCode(character);
+
+            //logger.error("world:{}, stringCode:{}", new Object[]{character, stringCode});
+            List<Integer> tmp = invertCache1.getDocIdByStringNum(stringCode);
 
             if (CollectionUtils.isEmpty(tmp)) {
                 continue;
             }
 
+            logger.error("character{}:{}", new Object[]{character, Joiner.on(" ").join(tmp)});
             allDocId.add(tmp);
         }
 
@@ -61,7 +68,6 @@ public class Search {
 
         return SortUtil.merge(allDocId);
     }
-
 
     public List<Integer> filterDocId(List<Integer> docIds, String string) {
 
@@ -75,7 +81,7 @@ public class Search {
             for (Character character : string.toCharArray()) {
 
                 List<WordInfo> wordInfoList = invertCache1.getWorldInfoCache().get(docId);
-                int index = Collections.binarySearch(wordInfoList, invertCache1.getStringCode(String.valueOf(character)));
+                int index = Collections.binarySearch(wordInfoList, invertCache1.getStringCode(character));
                 if (index > 0) {
                     WordInfo wordInfo = wordInfoList.get(index);
                     mergeNodes.add(new MergeNode(pos++, SortUtil.bitArrayToList(wordInfo.getPosList())));
@@ -184,7 +190,7 @@ public class Search {
 
             threadPool.submit(new Runnable() {
                 public void run() {
-                    List<Integer> tmp = filterDocId(integers, string);
+                    List<Integer> tmp = integers; //filterDocId(integers, string);
                     synchronized (object) {
                         res.addAll(tmp);
                     }
@@ -193,6 +199,7 @@ public class Search {
             });
 
         }
+
 
         try {
             countDownLatch.await();
@@ -204,5 +211,9 @@ public class Search {
         logger.info("查询词:{}, filterDocId耗时:{}毫秒, 结果数{}", new Object[]{string, (end - begin) * 1.0 / 1000000, res.size()});
         return res;
 
+    }
+
+    private static final class SearchHolder {
+        private static final Search instance = new Search();
     }
 }
