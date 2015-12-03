@@ -30,7 +30,8 @@ public class ForwardCache {
     private static String serialize_file = "/Users/yjj/m/log/".concat(String.valueOf(System.currentTimeMillis()).concat(".ivt"));
     private static int flag = 0;
     private long lastModified = 0;
-    private InvertCache1 invertCache1 = InvertCache1.getInstance();
+    //    private InvertCache1 invertCache1 = InvertCache1.getInstance();
+    private InvertCache2 invertCache1 = InvertCache2.getInstance();
 
     @PostConstruct
     private void init() {

@@ -1,17 +1,13 @@
 package com.search.engine.util;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
-import com.search.engine.pojo.Doc;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.security.util.BitArray;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -166,6 +162,7 @@ public class SortUtil {
 
         return res;
     }
+
 
     public static void main(String[] args) {
 
