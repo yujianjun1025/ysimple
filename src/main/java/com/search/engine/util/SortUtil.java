@@ -23,11 +23,10 @@ public class SortUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(SortUtil.class);
 
-    private static List<TermIntersection> intersection(int leftCode, List<TermInfo> left, int rightCode, List<TermInfo> right) {
+    private static List<TermIntersection> intersectionByBinSearch(int leftCode, List<TermInfo> left, int rightCode, List<TermInfo> right) {
 
         List<TermIntersection> res = Lists.newArrayList();
         for (TermInfo termInfo : left) {
-
             int index = Collections.binarySearch(right, termInfo.getDocId());
             if (index >= 0) {
 
@@ -37,16 +36,48 @@ public class SortUtil {
                 res.add(new TermIntersection(termInfo.getDocId(), termInfoMap));
 
             }
-
         }
+
+        return res;
+    }
+
+    private static List<TermIntersection> intersectionOneByOne(int leftCode, List<TermInfo> left, int rightCode, List<TermInfo> right) {
+
+        List<TermIntersection> res = Lists.newArrayList();
+
+        int p1 = 0, p2 = 0;
+        while (Ints.compare(p1, left.size()) == -1 && Ints.compare(p2, right.size()) == -1) {
+            int compare = Ints.compare(left.get(p1).getDocId(), right.get(p2).getDocId());
+            if (compare == 0) {
+                Map<Integer, TermInfo> termInfoMap = Maps.newHashMap();
+                termInfoMap.put(leftCode, left.get(p1));
+                termInfoMap.put(rightCode, right.get(p2));
+                res.add(new TermIntersection(left.get(p1).getDocId(), termInfoMap));
+                p1++;
+                p2++;
+            } else if (compare < 0) {
+                p1++;
+            } else {
+                p2++;
+            }
+        }
+
 
         return res;
     }
 
     private static List<TermIntersection> intersectionOnlyTwo(List<TermCodeAndTermInfoList> termCodeAndTermInfoList) {
 
-        return intersection(termCodeAndTermInfoList.get(0).getTermCode(), termCodeAndTermInfoList.get(0).getTermInfoList(),
+        int diff = termCodeAndTermInfoList.get(1).getTermInfoList().size() / termCodeAndTermInfoList.get(0).getTermInfoList().size();
+
+        if (diff > 20 || (1 << (diff + 1) > termCodeAndTermInfoList.get(1).getTermInfoList().size())) {
+            return intersectionByBinSearch(termCodeAndTermInfoList.get(0).getTermCode(), termCodeAndTermInfoList.get(0).getTermInfoList(),
+                    termCodeAndTermInfoList.get(1).getTermCode(), termCodeAndTermInfoList.get(1).getTermInfoList());
+        }
+
+        return intersectionOneByOne(termCodeAndTermInfoList.get(0).getTermCode(), termCodeAndTermInfoList.get(0).getTermInfoList(),
                 termCodeAndTermInfoList.get(1).getTermCode(), termCodeAndTermInfoList.get(1).getTermInfoList());
+
     }
 
     private static List<TermIntersection> intersectionOnlyOne(List<TermCodeAndTermInfoList> termCodeAndTermInfoList) {
@@ -64,7 +95,7 @@ public class SortUtil {
     }
 
 
-    private static List<TermIntersection> intersection(List<TermIntersection> termIntersectionList, int rightCode, List<TermInfo> right) {
+    private static List<TermIntersection> intersectionByBinSearch(List<TermIntersection> termIntersectionList, int rightCode, List<TermInfo> right) {
 
         List<TermIntersection> res = Lists.newArrayList();
 
@@ -73,7 +104,6 @@ public class SortUtil {
 
             int index = Collections.binarySearch(right, termIntersection.getDocId());
             if (index > 0) {
-
                 Map<Integer, TermInfo> termInfoMap = termIntersection.getTermInfoMap();
                 termInfoMap.put(rightCode, right.get(index));
                 res.add(new TermIntersection(termIntersection.getDocId(), termInfoMap));
@@ -84,7 +114,43 @@ public class SortUtil {
 
     }
 
-    public static List<TermIntersection> intersection(List<TermCodeAndTermInfoList> termCodeAndTermInfoList) {
+    private static List<TermIntersection> intersectionOneByOne(List<TermIntersection> termIntersectionList, int rightCode, List<TermInfo> right) {
+
+        List<TermIntersection> res = Lists.newArrayList();
+
+        int p1 = 0, p2 = 0;
+        while (Ints.compare(p1, termIntersectionList.size()) == -1 && Ints.compare(p2, right.size()) == -1) {
+            int compare = Ints.compare(termIntersectionList.get(p1).getDocId(), right.get(p2).getDocId());
+            if (compare == 0) {
+                Map<Integer, TermInfo> termInfoMap = termIntersectionList.get(p1).getTermInfoMap();
+                termInfoMap.put(rightCode, right.get(p2));
+                res.add(new TermIntersection(right.get(p1).getDocId(), termInfoMap));
+                p1++;
+                p2++;
+            } else if (compare < 0) {
+                p1++;
+            } else {
+                p2++;
+            }
+        }
+
+        return res;
+
+    }
+
+    private static List<TermIntersection> intersection(List<TermIntersection> termIntersectionList, int rightCode, List<TermInfo> right) {
+
+        int diff = right.size() / termIntersectionList.size();
+
+        if (diff > 20 || (1 << (diff + 1) > right.size())) {
+            return intersectionByBinSearch(termIntersectionList, rightCode, right);
+        }
+
+        return intersectionOneByOne(termIntersectionList, rightCode, right);
+    }
+
+
+    public static List<TermIntersection> intersectionByBinSearch(List<TermCodeAndTermInfoList> termCodeAndTermInfoList) {
 
         if (CollectionUtils.isEmpty(termCodeAndTermInfoList)) {
             return Lists.newArrayList();

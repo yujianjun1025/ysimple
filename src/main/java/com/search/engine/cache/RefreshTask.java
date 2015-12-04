@@ -35,6 +35,7 @@ public class RefreshTask {
     @PostConstruct
     private void init() {
 
+        logger.info("启动初始化倒排索引任务");
         new Thread(new Runnable() {
             public void run() {
 
@@ -59,13 +60,14 @@ public class RefreshTask {
 
             }
         }).start();
-        logger.info("启动初始化倒排索引任务");
     }
 
 
     public void buildIndex(String fileName) {
 
 
+        long begin = System.currentTimeMillis();
+        logger.info("开始生成倒排");
         BufferedReader bufferedReader = null;
         try {
 
@@ -104,10 +106,13 @@ public class RefreshTask {
 
         }
 
+        long end = System.currentTimeMillis();
+        logger.info("生成倒排耗时{}毫秒", end - begin);
+
+        begin = end;
         logger.info("开始计算rank值");
-        long begin = System.currentTimeMillis();
         invertCache.calculateRank();
-        logger.info("计算rerank值耗时{}", System.currentTimeMillis() - begin);
+        logger.info("计算rerank值耗时{}毫秒", System.currentTimeMillis() - begin);
 
     }
 

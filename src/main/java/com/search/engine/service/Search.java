@@ -52,10 +52,10 @@ public class Search {
             termCodeAndTermInfoLists.add(new TermCodeAndTermInfoList(termCode, invertCache.getTermInfo(termCode)));
         }
 
-        List<TermIntersection> res = SortUtil.intersection(termCodeAndTermInfoLists);
+        List<TermIntersection> res = SortUtil.intersectionByBinSearch(termCodeAndTermInfoLists);
 
         long end = System.nanoTime();
-        logger.info("得到所有的docId耗时:{}毫秒", new Object[]{(end - begin) * 1.0 / 1000000});
+        logger.info("求交得到所有的docId耗时:{}毫秒", new Object[]{(end - begin) * 1.0 / 1000000});
         return res;
     }
 
@@ -65,7 +65,6 @@ public class Search {
         List<Integer> res = Lists.newArrayList();
 
         for (TermIntersection termIntersection : termIntersectionList) {
-
 
             //logger.info("需要过滤的信息:\n{}", termIntersection.toString());
             List<Node> nodeList = Lists.newArrayList();
