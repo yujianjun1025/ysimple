@@ -7,8 +7,10 @@ import com.esotericsoftware.kryo.io.Output;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.primitives.Ints;
 import com.search.engine.pojo.DocInfo;
+import com.search.engine.pojo.TermInfo;
+import com.search.engine.service.Search;
+import com.search.engine.util.SegUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,30 +22,40 @@ import java.util.Map;
 /**
  * Created by yjj on 15/11/29.
  */
-public class InvertCache2 implements KryoSerializable {
+public class InvertCache implements KryoSerializable {
+
+    private static final long serialVersionUID = -2385906232920579818L;
+    private static final Logger logger = LoggerFactory.getLogger(InvertCache.class);
 
 
-    private static final Logger logger = LoggerFactory.getLogger(InvertCache1.class);
-    private static Integer DOC_COUNT = 0;
+    private static int WORD_COUNT = 0;
+    private static int DOC_COUNT = 0;
     private Map<Integer, List<TermInfo>> invertCache = Maps.newHashMap();
     private Map<String, Integer> str2int = Maps.newHashMap();
-    private int WORD_COUNT = 0;
 
-    public static InvertCache2 getInstance() {
-        return InvertCache2Holder.instance;
+    public List<TermInfo> getTermInfo(Integer stringCode) {
+        List<TermInfo> res = invertCache.get(stringCode);
+        return res != null ? res : Lists.<TermInfo>newArrayList();
     }
 
-    public Integer getStringCode(Character character) {
+    public Integer getStringCode(String string) {
 
-        Integer res = str2int.get(String.valueOf(character));
+        Integer res = str2int.get(String.valueOf(string));
         return res != null ? res : -1;
+    }
 
+    public List<Integer> getTermCodeList(String string) {
+
+        List<Integer> res = Lists.newArrayList();
+        for (String str : SegUtil.split(string)) {
+            res.add(getStringCode(str));
+        }
+        return res;
     }
 
     public void addDocInfo(DocInfo docInfo) {
 
         DOC_COUNT++;
-
         for (Map.Entry<String, Collection<Integer>> entry : docInfo.getWorldPosition().asMap().entrySet()) {
 
 
@@ -68,7 +80,6 @@ public class InvertCache2 implements KryoSerializable {
                 termInfoList.add(Math.abs(index + 1), termInfo);
             }
         }
-
 
     }
 
@@ -105,72 +116,16 @@ public class InvertCache2 implements KryoSerializable {
             stringBuilder.append(entry.getKey()).append(":").append(Joiner.on(" ").join(entry.getValue())).append("\n");
         }
 
-        return "InvertCache2{\n" + stringBuilder.toString() + '}';
+        return "InvertCache{\n" + stringBuilder.toString() + '}';
     }
 
-    public static class TermInfo implements Comparable<Integer> {
-
-        private int docId;
-        private List<Integer> posList;
-        private int tf;
-        private double rank;
-
-        public TermInfo(Integer docId, Collection<Integer> posList, int tf) {
-            this.docId = docId;
-            this.posList = Lists.newArrayList(posList);
-            this.tf = tf;
-        }
-
-        public int compareTo(Integer o) {
-            return Ints.compare(0, docId);
-        }
-
-        public int getDocId() {
-            return docId;
-        }
-
-        public void setDocId(int docId) {
-            this.docId = docId;
-        }
-
-        public List<Integer> getPosList() {
-            return posList;
-        }
-
-        public void setPosList(List<Integer> posList) {
-            this.posList = posList;
-        }
-
-
-        public int getTf() {
-            return tf;
-        }
-
-        public void setTf(int tf) {
-            this.tf = tf;
-        }
-
-        public double getRank() {
-            return rank;
-        }
-
-        public void setRank(double rank) {
-            this.rank = rank;
-        }
-
-        @Override
-        public String toString() {
-            return "InvertDocInfo{" +
-                    "docId=" + docId +
-                    ", posList=" + Joiner.on(" ").join(posList) +
-                    ", tf=" + tf +
-                    ", rank=" + rank +
-                    '}';
-        }
-
-    }
 
     public static final class InvertCache2Holder {
-        private static final InvertCache2 instance = new InvertCache2();
+        private static final InvertCache instance = new InvertCache();
     }
+
+    public static InvertCache getInstance() {
+        return InvertCache2Holder.instance;
+    }
+
 }

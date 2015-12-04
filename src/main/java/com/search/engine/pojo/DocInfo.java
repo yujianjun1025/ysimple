@@ -14,17 +14,11 @@ import java.util.Map;
 /**
  * Created by yjj on 15/11/29.
  */
-public class DocInfo implements KryoSerializable {
-
-    private static final long serialVersionUID = -2385906232920579818L;
+public class DocInfo {
 
     private int docId;
     private int worldCount;
     private Multimap<String, Integer> worldPosition = ArrayListMultimap.create();
-
-    public DocInfo() {
-
-    }
 
     public DocInfo(Integer docId, Integer worldCount, Multimap<String, Integer> worldPosition) {
         this.docId = docId;
@@ -54,35 +48,6 @@ public class DocInfo implements KryoSerializable {
 
     public void setWorldPosition(Multimap<String, Integer> worldPosition) {
         this.worldPosition = worldPosition;
-    }
-
-    public void write(Kryo kryo, Output output) {
-
-        output.writeInt(docId);
-        output.writeInt(worldCount);
-        output.writeInt(worldPosition.size());
-        for (Map.Entry<String, Collection<Integer>> entry : worldPosition.asMap().entrySet()) {
-            output.writeString(entry.getKey());
-            output.writeInt(entry.getValue().size());
-            for (Integer integer : entry.getValue()) {
-                output.writeInt(integer);
-            }
-        }
-    }
-
-    public void read(Kryo kryo, Input input) {
-        docId = input.readInt();
-        worldCount = input.readInt();
-
-        int worldPositionSize = input.readInt();
-        for (int i = 0; i < worldPositionSize; i++) {
-            String world = input.readString();
-            int posSize = input.readInt();
-            for (int j = 0; j < posSize; j++) {
-                worldPosition.put(world, input.readInt());
-            }
-        }
-
     }
 
     @Override

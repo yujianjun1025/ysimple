@@ -11,24 +11,10 @@ public class Doc {
 
     private int docId;
     private String value;
-
-
     public Doc(Integer docId, String value) {
         this.docId = docId;
         this.value = value.intern();
     }
-
-
-    public List<String> split() {
-
-        List<String> result = Lists.newArrayList();
-        for (Character character : value.toCharArray()) {
-            result.add(character.toString());
-        }
-        return result;
-
-    }
-
 
     public Integer getDocId() {
 

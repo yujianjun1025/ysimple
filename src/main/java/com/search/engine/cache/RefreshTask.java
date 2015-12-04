@@ -6,6 +6,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.search.engine.pojo.Doc;
 import com.search.engine.pojo.DocInfo;
+import com.search.engine.util.SegUtil;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,22 +22,21 @@ import java.util.List;
 
 
 @Service
-public class ForwardCache {
+public class RefreshTask {
 
-    private static final Logger logger = LoggerFactory.getLogger(ForwardCache.class);
+    private static final Logger logger = LoggerFactory.getLogger(RefreshTask.class);
 
-    private static String FILE_NAME = "/Users/yjj/m/search_engine/src/main/resources/search_data.txt";
+    private static String FILE_NAME = RefreshTask.class.getResource("search_data.txt").getFile();
+    private static String serialize_file = "./".concat(String.valueOf(System.currentTimeMillis()).concat(".ivt"));
 
-    private static String serialize_file = "/Users/yjj/m/log/".concat(String.valueOf(System.currentTimeMillis()).concat(".ivt"));
     private static int flag = 0;
-    private long lastModified = 0;
-    //    private InvertCache1 invertCache1 = InvertCache1.getInstance();
-    private InvertCache2 invertCache1 = InvertCache2.getInstance();
+    private static long lastModified = 0;
+    private static InvertCache invertCache1 = InvertCache.getInstance();
 
     @PostConstruct
     private void init() {
 
-        synchronized (ForwardCache.class) {
+        synchronized (RefreshTask.class) {
 
             logger.info("进入同步块,线程ID {}", Thread.currentThread().getId());
             if (flag == 0) {
@@ -50,7 +50,7 @@ public class ForwardCache {
                             File file = new File(FILE_NAME);
                             long tmpVersion = file.lastModified();
                             if (tmpVersion > lastModified) {
-                                produceForward(FILE_NAME);
+                                buildIndex(FILE_NAME);
                                 lastModified = tmpVersion;
                             }
 
@@ -74,7 +74,7 @@ public class ForwardCache {
     }
 
 
-    public void produceForward(String fileName) {
+    public void buildIndex(String fileName) {
 
 
         BufferedReader bufferedReader = null;
@@ -91,7 +91,7 @@ public class ForwardCache {
                 }
 
                 Doc doc = new Doc(docId++, tmpStr);
-                List<String> splitWorld = doc.split();
+                List<String> splitWorld = SegUtil.split(doc.getValue());
                 Integer pos = 0;
                 Multimap<String, Integer> worldPosition = ArrayListMultimap.create();
                 for (String world : splitWorld) {
@@ -138,7 +138,7 @@ public class ForwardCache {
             kryo.setReferences(false);
             kryo.setRegistrationRequired(false);
             kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
-            kryo.register(InvertCache1.class);
+            kryo.register(InvertCache.class);
             invertCache1.write(kryo, output);
 
         } catch (Exception e) {
@@ -147,6 +147,5 @@ public class ForwardCache {
 
 
     }
-
 
 }
