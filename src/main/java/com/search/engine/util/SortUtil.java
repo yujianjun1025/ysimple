@@ -1,6 +1,5 @@
 package com.search.engine.util;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
@@ -24,7 +23,7 @@ public class SortUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(SortUtil.class);
 
-    public static List<TermIntersection> intersection(int leftCode, List<TermInfo> left, int rightCode, List<TermInfo> right) {
+    private static List<TermIntersection> intersection(int leftCode, List<TermInfo> left, int rightCode, List<TermInfo> right) {
 
         List<TermIntersection> res = Lists.newArrayList();
         for (TermInfo termInfo : left) {
@@ -44,13 +43,13 @@ public class SortUtil {
         return Lists.newArrayList();
     }
 
-    public static List<TermIntersection> intersectionOnlyTwo(List<TermCodeAndTermInfoList> termCodeAndTermInfoList) {
+    private static List<TermIntersection> intersectionOnlyTwo(List<TermCodeAndTermInfoList> termCodeAndTermInfoList) {
 
         return intersection(termCodeAndTermInfoList.get(0).getTermCode(), termCodeAndTermInfoList.get(0).getTermInfoList(),
                 termCodeAndTermInfoList.get(1).getTermCode(), termCodeAndTermInfoList.get(1).getTermInfoList());
     }
 
-    public static List<TermIntersection> intersectionOnlyOne(List<TermCodeAndTermInfoList> termCodeAndTermInfoList) {
+    private static List<TermIntersection> intersectionOnlyOne(List<TermCodeAndTermInfoList> termCodeAndTermInfoList) {
 
         List<TermIntersection> res = Lists.newArrayList();
         Integer termCode = termCodeAndTermInfoList.get(0).getTermCode();
@@ -65,7 +64,7 @@ public class SortUtil {
     }
 
 
-    public static List<TermIntersection> intersection(List<TermIntersection> termIntersectionList, int rightCode, List<TermInfo> right) {
+    private static List<TermIntersection> intersection(List<TermIntersection> termIntersectionList, int rightCode, List<TermInfo> right) {
 
         List<TermIntersection> res = Lists.newArrayList();
 
@@ -123,7 +122,6 @@ public class SortUtil {
 
     }
 
-
     public static int contain(String src, String dst, int[] dstNext) {
 
         if (dstNext == null) {
@@ -150,7 +148,6 @@ public class SortUtil {
 
 
     public static List<Integer> bitArrayToList(BitArray bitArray) {
-
 
         List<Integer> res = Lists.newArrayList();
         for (int i = 0; i < bitArray.length(); i++) {
