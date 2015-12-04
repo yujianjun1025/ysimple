@@ -1,5 +1,6 @@
 package com.search.engine.util;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
@@ -29,7 +30,7 @@ public class SortUtil {
         for (TermInfo termInfo : left) {
 
             int index = Collections.binarySearch(right, termInfo.getDocId());
-            if (index > 0) {
+            if (index >= 0) {
 
                 Map<Integer, TermInfo> termInfoMap = Maps.newHashMap();
                 termInfoMap.put(leftCode, termInfo);
@@ -40,7 +41,7 @@ public class SortUtil {
 
         }
 
-        return Lists.newArrayList();
+        return res;
     }
 
     private static List<TermIntersection> intersectionOnlyTwo(List<TermCodeAndTermInfoList> termCodeAndTermInfoList) {
@@ -90,17 +91,25 @@ public class SortUtil {
             return Lists.newArrayList();
         }
 
+        logger.info("需要求交集合排序前结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
+
         Collections.sort(termCodeAndTermInfoList, new Comparator<TermCodeAndTermInfoList>() {
             public int compare(TermCodeAndTermInfoList o1, TermCodeAndTermInfoList o2) {
                 return Ints.compare(o1.getTermInfoList().size(), o2.getTermInfoList().size());
             }
         });
 
+        List<TermIntersection> res = Lists.newArrayList();
+        logger.info("需要求交集合排序后结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
         if (termCodeAndTermInfoList.size() == 1) {
-            return intersectionOnlyOne(termCodeAndTermInfoList);
+            res = intersectionOnlyOne(termCodeAndTermInfoList);
+            logger.info("一位求交结果:\n{}", Joiner.on(" ").join(res));
+            return res;
+
         }
 
-        List<TermIntersection> res = intersectionOnlyTwo(termCodeAndTermInfoList);
+        res = intersectionOnlyTwo(termCodeAndTermInfoList);
+        logger.info("前2位求交结果:\n{}", Joiner.on(" ").join(res));
         for (int i = 2; i < termCodeAndTermInfoList.size(); i++) {
             res = intersection(res, termCodeAndTermInfoList.get(i).getTermCode(), termCodeAndTermInfoList.get(i).getTermInfoList());
         }

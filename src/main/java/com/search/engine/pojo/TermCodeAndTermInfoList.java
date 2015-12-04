@@ -1,5 +1,7 @@
 package com.search.engine.pojo;
 
+import com.google.common.base.Joiner;
+
 import java.util.List;
 
 /**
@@ -7,7 +9,7 @@ import java.util.List;
  */
 public class TermCodeAndTermInfoList {
 
-    private Integer termCode ;
+    private Integer termCode;
     private List<TermInfo> termInfoList;
 
     public TermCodeAndTermInfoList(Integer termCode, List<TermInfo> termInfoList) {
@@ -29,5 +31,13 @@ public class TermCodeAndTermInfoList {
 
     public void setTermInfoList(List<TermInfo> termInfoList) {
         this.termInfoList = termInfoList;
+    }
+
+    @Override
+    public String toString() {
+        return "TermCodeAndTermInfoList{" +
+                "termCode=" + termCode +
+                ", termInfoList=" + Joiner.on(" ").join(termInfoList) +
+                '}';
     }
 }

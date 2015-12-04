@@ -24,7 +24,7 @@ public class TermInfo implements Comparable<Integer> {
     }
 
     public int compareTo(Integer o) {
-        return Ints.compare(0, docId);
+        return Ints.compare(docId, o);
     }
 
     public int getDocId() {

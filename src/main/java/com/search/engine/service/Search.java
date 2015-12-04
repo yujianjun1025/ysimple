@@ -6,7 +6,6 @@ import com.search.engine.cache.InvertCache;
 import com.search.engine.pojo.TermCodeAndTermInfoList;
 import com.search.engine.pojo.TermInfo;
 import com.search.engine.pojo.TermIntersection;
-import com.search.engine.util.SegUtil;
 import com.search.engine.util.SortUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,9 +46,8 @@ public class Search {
         long begin = System.nanoTime();
 
         List<TermCodeAndTermInfoList> termCodeAndTermInfoLists = Lists.newArrayList();
-        for (String str : SegUtil.split(string)) {
 
-            int termCode = invertCache.getStringCode(str);
+        for (Integer termCode : invertCache.getTermCodeList(string)) {
             termCodeAndTermInfoLists.add(new TermCodeAndTermInfoList(termCode, invertCache.getTermInfo(termCode)));
         }
 
@@ -90,6 +88,7 @@ public class Search {
             }
 
             if (nodeList.size() <= 1) {
+                res.add(nodeList.get(0).getTermInfo().getDocId());
                 continue;
             }
 
