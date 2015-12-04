@@ -123,7 +123,7 @@ public class Search {
         final List<Integer> termCodeList = invertCache.getTermCodeList(string);
         List<TermIntersection> termIntersection = getDocIdIntersection(string);
         long end = System.nanoTime();
-        logger.info("查询词:{}, 得到所有docIds耗时:{}毫秒, 结果数{}", new Object[]{string, (end - begin) * 1.0 / 1000000, termIntersection.size()});
+        logger.info("查询词:{}, 得到所有docIds耗时:{}毫秒, 结果数{}", string, (end - begin) * 1.0 / 1000000, termIntersection.size());
         begin = end;
 
         final Object object = new Object();
@@ -152,14 +152,26 @@ public class Search {
         }
 
         end = System.nanoTime();
-        logger.info("查询词:{}, filterDocId耗时:{}毫秒, 结果数{}", new Object[]{string, (end - begin) * 1.0 / 1000000, res.size()});
+        logger.info("查询词:{}, filterDocId耗时:{}毫秒, 结果数{}", string, (end - begin) * 1.0 / 1000000, res.size());
         return res;
 
+    }
+
+    private static final class SearchHolder {
+        private static final Search instance = new Search();
     }
 
     class Node implements Comparable<Integer> {
         private int offset;
         private int order;
+        private int termCode;
+        private TermInfo termInfo;
+
+        public Node(int termCode, int order, TermInfo termInfo) {
+            this.termCode = termCode;
+            this.order = order;
+            this.termInfo = termInfo;
+        }
 
         public int getOrder() {
             return order;
@@ -175,16 +187,6 @@ public class Search {
 
         public void setTermCode(int termCode) {
             this.termCode = termCode;
-        }
-
-        private int termCode;
-
-        private TermInfo termInfo;
-
-        public Node(int termCode, int order, TermInfo termInfo) {
-            this.termCode = termCode;
-            this.order = order;
-            this.termInfo = termInfo;
         }
 
         public TermInfo getTermInfo() {
@@ -206,9 +208,5 @@ public class Search {
         public int compareTo(Integer o) {
             return Ints.compare(termInfo.getPosList().size(), o);
         }
-    }
-
-    private static final class SearchHolder {
-        private static final Search instance = new Search();
     }
 }

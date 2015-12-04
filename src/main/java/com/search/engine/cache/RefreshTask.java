@@ -26,7 +26,7 @@ public class RefreshTask {
 
     private static final Logger logger = LoggerFactory.getLogger(RefreshTask.class);
 
-    private static String FILE_NAME = RefreshTask.class.getResource("search_data.txt").getFile();
+    private static String FILE_NAME = RefreshTask.class.getResource("/").getPath().concat("search_data.txt");
     private static String serialize_file = "./".concat(String.valueOf(System.currentTimeMillis()).concat(".ivt"));
 
     private static int flag = 0;
@@ -118,14 +118,8 @@ public class RefreshTask {
         logger.info("开始计算rank值");
         long begin = System.currentTimeMillis();
         invertCache1.calculateRank();
+        logger.info("计算rerank值耗时{}", System.currentTimeMillis() - begin);
 
-        long end = System.currentTimeMillis();
-        logger.info("计算rerank值耗时{}", end - begin);
-        begin = end;
-
-        logger.info("开始序列化倒排");
-        serialize(serialize_file);
-        logger.info("序列化耗时{}", System.currentTimeMillis() - begin);
     }
 
     public void serialize(String fileName) {

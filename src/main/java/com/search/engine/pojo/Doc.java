@@ -1,9 +1,5 @@
 package com.search.engine.pojo;
 
-import com.google.common.collect.Lists;
-
-import java.util.List;
-
 /**
  * Created by yjj on 15/11/22.
  */
