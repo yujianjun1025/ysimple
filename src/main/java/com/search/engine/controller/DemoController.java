@@ -22,11 +22,11 @@ public class DemoController {
 
     @RequestMapping("test.json")
     @ResponseBody
-    public Map<String, Object> test(@RequestParam(value = "world", required = true) String world) {
+    public Map<String, Object> test(@RequestParam(value = "query", required = true) String query) {
         Map<String, Object> res = new HashMap<String, Object>();
 
         try {
-            res.put("data", search.doSearch(world));
+            res.put("data", search.doSearch(query));
             res.put("ret", true);
 
         } catch (Exception e) {

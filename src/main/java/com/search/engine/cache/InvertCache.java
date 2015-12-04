@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.search.engine.pojo.DocInfo;
 import com.search.engine.pojo.TermInfo;
-import com.search.engine.service.Search;
 import com.search.engine.util.SegUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,28 +26,34 @@ public class InvertCache implements KryoSerializable {
     private static final long serialVersionUID = -2385906232920579818L;
     private static final Logger logger = LoggerFactory.getLogger(InvertCache.class);
 
-
     private static int WORD_COUNT = 0;
     private static int DOC_COUNT = 0;
     private Map<Integer, List<TermInfo>> invertCache = Maps.newHashMap();
     private Map<String, Integer> str2int = Maps.newHashMap();
+
+    public static InvertCache getInstance() {
+        return InvertCache2Holder.instance;
+    }
 
     public List<TermInfo> getTermInfo(Integer stringCode) {
         List<TermInfo> res = invertCache.get(stringCode);
         return res != null ? res : Lists.<TermInfo>newArrayList();
     }
 
-    public Integer getStringCode(String string) {
-
-        Integer res = str2int.get(String.valueOf(string));
-        return res != null ? res : -1;
+    private Integer str2Int(String string) {
+        return str2int.get(String.valueOf(string));
     }
 
-    public List<Integer> getTermCodeList(String string) {
+    public List<Integer> getTermCodeListByQuery(String query) {
 
         List<Integer> res = Lists.newArrayList();
-        for (String str : SegUtil.split(string)) {
-            res.add(getStringCode(str));
+        for (String string : SegUtil.split(query)) {
+
+            Integer string2code = str2Int(string);
+            if (string2code == null) {
+                return Lists.newArrayList();
+            }
+            res.add(string2code);
         }
         return res;
     }
@@ -71,12 +76,11 @@ public class InvertCache implements KryoSerializable {
                 invertCache.put(stringCode, termInfoList);
             }
 
-            TermInfo termInfo = null;
             int index = Collections.binarySearch(termInfoList, docInfo.getDocId());
             if (index < 0) {
 
                 int tf = (entry.getValue().size() * 1000) / docInfo.getWorldCount();
-                termInfo = new TermInfo(docInfo.getDocId(), entry.getValue(), tf);
+                TermInfo termInfo = new TermInfo(docInfo.getDocId(), entry.getValue(), tf);
                 termInfoList.add(Math.abs(index + 1), termInfo);
             }
         }
@@ -119,13 +123,8 @@ public class InvertCache implements KryoSerializable {
         return "InvertCache{\n" + stringBuilder.toString() + '}';
     }
 
-
     public static final class InvertCache2Holder {
         private static final InvertCache instance = new InvertCache();
-    }
-
-    public static InvertCache getInstance() {
-        return InvertCache2Holder.instance;
     }
 
 }

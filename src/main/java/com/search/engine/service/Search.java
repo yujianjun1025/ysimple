@@ -7,6 +7,7 @@ import com.search.engine.pojo.TermCodeAndTermInfoList;
 import com.search.engine.pojo.TermInfo;
 import com.search.engine.pojo.TermIntersection;
 import com.search.engine.util.SortUtil;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +38,9 @@ public class Search {
         return SearchHolder.instance;
     }
 
-    public List<TermIntersection> getDocIdIntersection(String string) {
+    public List<TermIntersection> getDocIdIntersection(List<Integer> termCodeList) {
 
-        if (string == null || string.length() == 0) {
+        if (CollectionUtils.isEmpty(termCodeList)) {
             return Lists.newArrayList();
         }
 
@@ -47,7 +48,7 @@ public class Search {
 
         List<TermCodeAndTermInfoList> termCodeAndTermInfoLists = Lists.newArrayList();
 
-        for (Integer termCode : invertCache.getTermCodeList(string)) {
+        for (Integer termCode : termCodeList) {
             termCodeAndTermInfoLists.add(new TermCodeAndTermInfoList(termCode, invertCache.getTermInfo(termCode)));
         }
 
@@ -66,6 +67,7 @@ public class Search {
         for (TermIntersection termIntersection : termIntersectionList) {
 
 
+            //logger.info("需要过滤的信息:\n{}", termIntersection.toString());
             List<Node> nodeList = Lists.newArrayList();
 
             int order = 1;
@@ -73,12 +75,15 @@ public class Search {
                 nodeList.add(new Node(termCode, order++, termIntersection.getTermInfoMap().get(termCode)));
             }
 
+            //logger.info("排序前nodeList:\n{}", Joiner.on("\n").join(nodeList));
+
             Collections.sort(nodeList, new Comparator<Node>() {
                 public int compare(Node o1, Node o2) {
                     return Ints.compare(o1.getTermInfo().getPosList().size(), o2.getTermInfo().getPosList().size());
                 }
             });
 
+            //logger.info("排序后nodeList:\n{}", Joiner.on("\n").join(nodeList));
 
             int lastOrder = nodeList.get(0).getOrder();
             for (Node node : nodeList) {
@@ -86,6 +91,8 @@ public class Search {
                 node.setOffset(offset);
                 lastOrder = node.getOrder();
             }
+
+            //logger.info("计算offset后的nodeList:\n{}", Joiner.on("\n").join(nodeList));
 
             if (nodeList.size() <= 1) {
                 res.add(nodeList.get(0).getTermInfo().getDocId());
@@ -95,13 +102,16 @@ public class Search {
             for (int k = 0; k < nodeList.get(0).getTermInfo().getPosList().size(); k++) {
 
                 boolean flag = true;
-                int i = nodeList.get(0).getTermInfo().getPosList().get(k);
+                int next = nodeList.get(0).getTermInfo().getPosList().get(k);
                 for (int j = 1; j < nodeList.size(); j++) {
-                    int index = Collections.binarySearch(nodeList.get(j).getTermInfo().getPosList(), i + j);
+
+                    next = next + nodeList.get(j).getOffset();
+                    int index = Collections.binarySearch(nodeList.get(j).getTermInfo().getPosList(), next);
                     if (index < 0) {
                         flag = false;
                         break;
                     }
+
                 }
 
                 if (flag) {
@@ -116,13 +126,13 @@ public class Search {
 
     }
 
-    public List<Integer> doSearch(final String string) {
+    public List<Integer> doSearch(final String query) {
 
         long begin = System.nanoTime();
-        final List<Integer> termCodeList = invertCache.getTermCodeList(string);
-        List<TermIntersection> termIntersection = getDocIdIntersection(string);
+        final List<Integer> termCodeList = invertCache.getTermCodeListByQuery(query);
+        List<TermIntersection> termIntersection = getDocIdIntersection(termCodeList);
         long end = System.nanoTime();
-        logger.info("查询词:{}, 得到所有docIds耗时:{}毫秒, 结果数{}", string, (end - begin) * 1.0 / 1000000, termIntersection.size());
+        logger.info("查询词:{}, 得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
         begin = end;
 
         final Object object = new Object();
@@ -151,7 +161,7 @@ public class Search {
         }
 
         end = System.nanoTime();
-        logger.info("查询词:{}, filterDocId耗时:{}毫秒, 结果数{}", string, (end - begin) * 1.0 / 1000000, res.size());
+        logger.info("查询词:{}, filterDocId耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, res.size());
         return res;
 
     }
@@ -206,6 +216,16 @@ public class Search {
 
         public int compareTo(Integer o) {
             return Ints.compare(termInfo.getPosList().size(), o);
+        }
+
+        @Override
+        public String toString() {
+            return "Node{" +
+                    "offset=" + offset +
+                    ", order=" + order +
+                    ", termCode=" + termCode +
+                    ", termInfo=" + termInfo +
+                    '}';
         }
     }
 }

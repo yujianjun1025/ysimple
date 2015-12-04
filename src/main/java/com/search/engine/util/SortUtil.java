@@ -1,6 +1,5 @@
 package com.search.engine.util;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
@@ -91,7 +90,7 @@ public class SortUtil {
             return Lists.newArrayList();
         }
 
-        logger.info("需要求交集合排序前结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
+        // logger.info("需要求交集合排序前结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
 
         Collections.sort(termCodeAndTermInfoList, new Comparator<TermCodeAndTermInfoList>() {
             public int compare(TermCodeAndTermInfoList o1, TermCodeAndTermInfoList o2) {
@@ -100,16 +99,15 @@ public class SortUtil {
         });
 
         List<TermIntersection> res = Lists.newArrayList();
-        logger.info("需要求交集合排序后结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
+        // logger.info("需要求交集合排序后结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
         if (termCodeAndTermInfoList.size() == 1) {
             res = intersectionOnlyOne(termCodeAndTermInfoList);
-            logger.info("一位求交结果:\n{}", Joiner.on(" ").join(res));
             return res;
 
         }
 
         res = intersectionOnlyTwo(termCodeAndTermInfoList);
-        logger.info("前2位求交结果:\n{}", Joiner.on(" ").join(res));
+        //  logger.info("前2位求交结果:\n{}", Joiner.on(" ").join(res));
         for (int i = 2; i < termCodeAndTermInfoList.size(); i++) {
             res = intersection(res, termCodeAndTermInfoList.get(i).getTermCode(), termCodeAndTermInfoList.get(i).getTermInfoList());
         }

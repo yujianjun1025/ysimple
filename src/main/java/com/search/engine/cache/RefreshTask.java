@@ -52,6 +52,9 @@ public class RefreshTask {
                             if (tmpVersion > lastModified) {
                                 buildIndex(FILE_NAME);
                                 lastModified = tmpVersion;
+
+                                //考虑内存还不理想，暂时不支持文件更新自动加载
+                                break;
                             }
 
                             try {

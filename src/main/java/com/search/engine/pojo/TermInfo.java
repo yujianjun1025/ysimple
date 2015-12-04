@@ -5,7 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.List;  
 
 /**
  * Created by yjj on 15/12/4.
