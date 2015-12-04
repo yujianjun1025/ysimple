@@ -91,7 +91,6 @@ public class SortUtil {
         }
 
         // logger.info("需要求交集合排序前结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
-
         Collections.sort(termCodeAndTermInfoList, new Comparator<TermCodeAndTermInfoList>() {
             public int compare(TermCodeAndTermInfoList o1, TermCodeAndTermInfoList o2) {
                 return Ints.compare(o1.getTermInfoList().size(), o2.getTermInfoList().size());

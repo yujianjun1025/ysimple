@@ -29,51 +29,37 @@ public class RefreshTask {
     private static String FILE_NAME = RefreshTask.class.getResource("/").getPath().concat("search_data.txt");
     private static String serialize_file = "./".concat(String.valueOf(System.currentTimeMillis()).concat(".ivt"));
 
-    private static int flag = 0;
     private static long lastModified = 0;
-    private static InvertCache invertCache1 = InvertCache.getInstance();
+    private static InvertCache invertCache = InvertCache.getInstance();
 
     @PostConstruct
     private void init() {
 
-        synchronized (RefreshTask.class) {
+        new Thread(new Runnable() {
+            public void run() {
 
-            logger.info("进入同步块,线程ID {}", Thread.currentThread().getId());
-            if (flag == 0) {
-                logger.info("flag == 0 执行初始化任务,线程ID {}", Thread.currentThread().getId());
-                flag = 1;
-                new Thread(new Runnable() {
-                    public void run() {
+                while (true) {
 
-                        while (true) {
+                    File file = new File(FILE_NAME);
+                    long tmpVersion = file.lastModified();
+                    if (tmpVersion > lastModified) {
+                        buildIndex(FILE_NAME);
+                        lastModified = tmpVersion;
 
-                            File file = new File(FILE_NAME);
-                            long tmpVersion = file.lastModified();
-                            if (tmpVersion > lastModified) {
-                                buildIndex(FILE_NAME);
-                                lastModified = tmpVersion;
-
-                                //考虑内存还不理想，暂时不支持文件更新自动加载
-                                break;
-                            }
-
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                logger.error("线程休眠出现异常", e);
-                            }
-                        }
-
+                        //考虑内存还不理想，暂时不支持文件更新自动加载
+                        break;
                     }
-                }).start();
-            } else {
-                logger.info("flag == 1 不执行初始化任务,线程ID {}", Thread.currentThread().getId());
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        logger.error("线程休眠出现异常", e);
+                    }
+                }
+
             }
-
-            logger.info("退出同步块,线程ID {}", Thread.currentThread().getId());
-
-        }
-
+        }).start();
+        logger.info("启动初始化倒排索引任务");
     }
 
 
@@ -103,7 +89,7 @@ public class RefreshTask {
                 }
 
                 DocInfo docInfo = new DocInfo(doc.getDocId(), splitWorld.size(), worldPosition);
-                invertCache1.addDocInfo(docInfo);
+                invertCache.addDocInfo(docInfo);
             }
 
         } catch (Exception e) {
@@ -120,7 +106,7 @@ public class RefreshTask {
 
         logger.info("开始计算rank值");
         long begin = System.currentTimeMillis();
-        invertCache1.calculateRank();
+        invertCache.calculateRank();
         logger.info("计算rerank值耗时{}", System.currentTimeMillis() - begin);
 
     }
@@ -136,7 +122,7 @@ public class RefreshTask {
             kryo.setRegistrationRequired(false);
             kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
             kryo.register(InvertCache.class);
-            invertCache1.write(kryo, output);
+            invertCache.write(kryo, output);
 
         } catch (Exception e) {
             logger.error("倒排序列化出现异常", e);

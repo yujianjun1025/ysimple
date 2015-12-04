@@ -1,16 +1,20 @@
 package com.search.engine.pojo;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoSerializable;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 
 import java.util.Collection;
-import java.util.List;  
+import java.util.List;
 
 /**
  * Created by yjj on 15/12/4.
  */
-public class TermInfo implements Comparable<Integer> {
+public class TermInfo implements Comparable<Integer>, KryoSerializable {
 
     private int docId;
     private List<Integer> posList;
@@ -70,4 +74,11 @@ public class TermInfo implements Comparable<Integer> {
                 '}';
     }
 
+    public void write(Kryo kryo, Output output) {
+
+    }
+
+    public void read(Kryo kryo, Input input) {
+
+    }
 }
