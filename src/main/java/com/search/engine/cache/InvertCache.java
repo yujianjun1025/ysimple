@@ -27,8 +27,8 @@ public class InvertCache implements KryoSerializable {
     private static final long serialVersionUID = -2385906232920579818L;
     private static final Logger logger = LoggerFactory.getLogger(InvertCache.class);
 
-    private static int WORD_COUNT = 0;
-    private static int DOC_COUNT = 0;
+    private int WORD_COUNT = 0;
+    private int DOC_COUNT = 0;
     private Map<Integer, List<TermInfo>> invertCache = Maps.newHashMap();
     private Map<String, Integer> str2int = Maps.newHashMap();
 
@@ -106,9 +106,46 @@ public class InvertCache implements KryoSerializable {
 
     public void write(Kryo kryo, Output output) {
 
+        output.writeInt(WORD_COUNT);
+        output.writeInt(DOC_COUNT);
+        output.writeInt(str2int.size());
+        for (Map.Entry<String, Integer> entry : str2int.entrySet()) {
+            output.writeString(entry.getKey());
+            output.writeInt(entry.getValue());
+        }
+
+        output.writeInt(invertCache.size());
+        for (Map.Entry<Integer, List<TermInfo>> entry : invertCache.entrySet()) {
+            output.writeInt(entry.getKey());
+            output.writeInt(entry.getValue().size());
+            for (TermInfo termInfo : entry.getValue()) {
+                termInfo.write(kryo, output);
+            }
+        }
     }
 
     public void read(Kryo kryo, Input input) {
+
+        WORD_COUNT = input.readInt();
+        DOC_COUNT = input.readInt();
+        int str2intSize = input.readInt();
+        for (int i = 0; i < str2intSize; i++) {
+            str2int.put(input.readString(), input.readInt());
+        }
+
+        int cacheSize = input.readInt();
+        for(int i = 0; i < cacheSize; i++){
+
+            int termCode = input.readInt();
+            int termSize = input.readInt();
+            List<TermInfo> termInfoList = Lists.newArrayList();
+            for(int j =0; j < termSize; j++){
+                TermInfo termInfo = new TermInfo();
+                termInfo.read(kryo, input);
+                termInfoList.add(termInfo);
+            }
+            invertCache.put(termCode, termInfoList);
+        }
 
     }
 

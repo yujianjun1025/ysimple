@@ -13,51 +13,16 @@ import java.util.List;
 
 /**
  * Created by yjj on 15/12/4.
+ * term信息
  */
 public class TermInfo implements Comparable<Integer>, KryoSerializable {
 
     private int docId;
-    private List<Integer> posList;
+    private List<Integer> posList = Lists.newArrayList();
     private int tf;
     private double rank;
 
-    public void write(Kryo kryo, Output output) {
-
-        output.writeInt(docId);
-        output.writeInt(posList.size());
-        for (Integer pos : posList) {
-            output.writeInt(pos);
-        }
-        output.writeInt(tf);
-        output.writeDouble(rank);
-    }
-
-    public void read(Kryo kryo, Input input) {
-
-
-        docId = input.readInt();
-        int posSize = input.readInt();
-        posList = Lists.newArrayList();
-        for (int i = 0; i < posSize; i++) {
-            posList.add(input.readInt());
-        }
-        tf = input.readInt();
-        rank = input.readDouble();
-
-    }
-
-    public void read(Kryo kryo, Input input) {
-
-
-        docId = input.readInt();
-        int posSize = input.readInt();
-        posList = Lists.newArrayList();
-        for (int i = 0; i < posSize; i++) {
-            posList.add(input.readInt());
-        }
-        tf = input.readInt();
-        rank = input.readDouble();
-
+    public TermInfo() {
     }
 
     public TermInfo(Integer docId, Collection<Integer> posList, int tf) {
@@ -101,6 +66,30 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
 
     public void setRank(double rank) {
         this.rank = rank;
+    }
+
+    public void write(Kryo kryo, Output output) {
+
+        output.writeInt(docId);
+        output.writeInt(posList.size());
+        for (Integer pos : posList) {
+            output.writeInt(pos);
+        }
+        output.writeInt(tf);
+        output.writeDouble(rank);
+    }
+
+    public void read(Kryo kryo, Input input) {
+
+        docId = input.readInt();
+        int posSize = input.readInt();
+        posList = Lists.newArrayList();
+        for (int i = 0; i < posSize; i++) {
+            posList.add(input.readInt());
+        }
+        tf = input.readInt();
+        rank = input.readDouble();
+
     }
 
     @Override

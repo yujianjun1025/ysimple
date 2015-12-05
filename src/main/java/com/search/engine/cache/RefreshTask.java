@@ -1,6 +1,7 @@
 package com.search.engine.cache;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -25,25 +26,27 @@ public class RefreshTask {
 
     private static final Logger logger = LoggerFactory.getLogger(RefreshTask.class);
 
-    private static String FILE_NAME = RefreshTask.class.getResource("/").getPath().concat("search_data.txt");
-    private static String serialize_file = "./".concat(String.valueOf(System.currentTimeMillis()).concat(".ivt"));
+    private static String TXT_FILE = RefreshTask.class.getResource("/").getPath().concat("search_data.txt");
+    private static String SERIAL_FILE = RefreshTask.class.getResource("/").getPath().concat(String.valueOf(System.currentTimeMillis()).concat(".ivt"));
 
     private static long lastModified = 0;
     private static InvertCache invertCache = InvertCache.getInstance();
 
     @PostConstruct
-    private void init() {
+    private void start() {
 
         logger.info("启动初始化倒排索引任务");
         new Thread(new Runnable() {
+
+
             public void run() {
 
                 while (true) {
 
-                    File file = new File(FILE_NAME);
+                    File file = new File(TXT_FILE);
                     long tmpVersion = file.lastModified();
                     if (tmpVersion > lastModified) {
-                        buildIndex(FILE_NAME);
+                        buildIndex(TXT_FILE);
                         lastModified = tmpVersion;
 
                         //考虑内存还不理想，暂时不支持文件更新自动加载
@@ -67,6 +70,25 @@ public class RefreshTask {
 
         long begin = System.currentTimeMillis();
         logger.info("开始生成倒排");
+        buildInvert(fileName);
+        long end = System.currentTimeMillis();
+        logger.info("生成倒排耗时{}毫秒", end - begin);
+
+        begin = end;
+        logger.info("开始计算rank值");
+        invertCache.calculateRank();
+        end = System.currentTimeMillis();
+        logger.info("计算rerank值耗时{}毫秒", end - begin);
+
+        begin = end;
+        logger.info("开始序列化");
+       // serialize(SERIAL_FILE);
+        end = System.currentTimeMillis();
+        logger.info("序列化完成{}", end - begin);
+
+    }
+
+    private void buildInvert(String fileName) {
         BufferedReader bufferedReader = null;
         try {
 
@@ -104,15 +126,6 @@ public class RefreshTask {
             }
 
         }
-
-        long end = System.currentTimeMillis();
-        logger.info("生成倒排耗时{}毫秒", end - begin);
-
-        begin = end;
-        logger.info("开始计算rank值");
-        invertCache.calculateRank();
-        logger.info("计算rerank值耗时{}毫秒", System.currentTimeMillis() - begin);
-
     }
 
     public void serialize(String fileName) {
@@ -131,8 +144,25 @@ public class RefreshTask {
         } catch (Exception e) {
             logger.error("倒排序列化出现异常", e);
         }
+    }
 
+    public void deserialize(String fileName) {
 
+        try {
+
+            Input input = new Input(new ObjectInputStream(new FileInputStream(fileName)));
+            Kryo kryo = new Kryo();
+            kryo.setReferences(false);
+            kryo.setRegistrationRequired(false);
+            kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
+
+            //invertCache = InvertCache.getInstance();
+            invertCache.read(kryo, input);
+
+        } catch (Exception e) {
+            logger.error("倒排反序列化时出现异常", e);
+
+        }
     }
 
 }
