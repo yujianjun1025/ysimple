@@ -47,7 +47,6 @@ public class TightnessSearch {
             return Lists.newArrayList();
         }
 
-        long begin = System.nanoTime();
 
         List<TermCodeAndTermInfoList> termCodeAndTermInfoLists = Lists.newArrayList();
 
@@ -56,9 +55,6 @@ public class TightnessSearch {
         }
 
         List<TermIntersection> res = GatherUtil.intersectionByBinSearch(termCodeAndTermInfoLists);
-
-        long end = System.nanoTime();
-        logger.info("求交得到所有的docId耗时:{}毫秒", new Object[]{(end - begin) * 1.0 / 1000000});
         return res;
     }
 
@@ -154,7 +150,7 @@ public class TightnessSearch {
         final List<Integer> termCodeList = invertCache.getTermCodeListByQuery(query);
         List<TermIntersection> termIntersection = getDocIdIntersection(termCodeList);
         long end = System.nanoTime();
-        logger.info("查询词:{}, 得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
+        logger.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
         begin = end;
 
         final List<DocIdAndRank> docIdAndRankRes = Lists.newArrayList();
@@ -196,7 +192,7 @@ public class TightnessSearch {
         }
 
         end = System.nanoTime();
-        logger.info("查询词:{}, filterDocId耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, docIdAndRankRes.size());
+        logger.info("查询词:{}, 过滤到符合要求的docId耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, docIdAndRankRes.size());
         return Lists.reverse(docIdAndRankRes);
 
     }
