@@ -20,6 +20,7 @@ import java.util.Map;
 
 /**
  * Created by yjj on 15/11/29.
+ * 倒排缓存类
  */
 public class InvertCache implements KryoSerializable {
 

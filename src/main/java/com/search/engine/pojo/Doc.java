@@ -2,6 +2,7 @@ package com.search.engine.pojo;
 
 /**
  * Created by yjj on 15/11/22.
+ *
  */
 public class Doc {
 

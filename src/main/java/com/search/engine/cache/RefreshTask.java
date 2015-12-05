@@ -18,9 +18,8 @@ import java.util.List;
 
 /**
  * Created by yjj on 15/11/22.
+ * 定时更新索引任务、虚拟化倒排文件，反虚拟化倒排文件任务
  */
-
-
 @Service
 public class RefreshTask {
 

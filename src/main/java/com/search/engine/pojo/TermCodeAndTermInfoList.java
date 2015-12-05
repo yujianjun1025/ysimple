@@ -6,6 +6,7 @@ import java.util.List;
 
 /**
  * Created by yjj on 15/12/4.
+ *
  */
 public class TermCodeAndTermInfoList {
 

@@ -1,6 +1,6 @@
 package com.search.engine.controller;
 
-import com.search.engine.service.Search;
+import com.search.engine.service.TightnessSearch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
@@ -18,15 +18,18 @@ public class DemoController {
     private static final Logger logger = LoggerFactory.getLogger(DemoController.class);
 
 
-    private Search search = Search.getInstance();
+    private TightnessSearch tightnessSearch = TightnessSearch.getInstance();
 
     @RequestMapping("test.json")
     @ResponseBody
-    public Map<String, Object> test(@RequestParam(value = "query", required = true) String query) {
+    public Map<String, Object> test(@RequestParam(value = "query", required = true) String query,
+                                    @RequestParam(value = "limit", required = false) Integer limit) {
         Map<String, Object> res = new HashMap<String, Object>();
 
         try {
-            res.put("data", search.doSearch(query));
+
+            int topN = limit != null ? limit : 3000;
+            res.put("data", tightnessSearch.doSearch(query, topN));
             res.put("ret", true);
 
         } catch (Exception e) {

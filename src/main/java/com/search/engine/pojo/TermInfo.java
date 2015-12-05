@@ -21,6 +21,45 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
     private int tf;
     private double rank;
 
+    public void write(Kryo kryo, Output output) {
+
+        output.writeInt(docId);
+        output.writeInt(posList.size());
+        for (Integer pos : posList) {
+            output.writeInt(pos);
+        }
+        output.writeInt(tf);
+        output.writeDouble(rank);
+    }
+
+    public void read(Kryo kryo, Input input) {
+
+
+        docId = input.readInt();
+        int posSize = input.readInt();
+        posList = Lists.newArrayList();
+        for (int i = 0; i < posSize; i++) {
+            posList.add(input.readInt());
+        }
+        tf = input.readInt();
+        rank = input.readDouble();
+
+    }
+
+    public void read(Kryo kryo, Input input) {
+
+
+        docId = input.readInt();
+        int posSize = input.readInt();
+        posList = Lists.newArrayList();
+        for (int i = 0; i < posSize; i++) {
+            posList.add(input.readInt());
+        }
+        tf = input.readInt();
+        rank = input.readDouble();
+
+    }
+
     public TermInfo(Integer docId, Collection<Integer> posList, int tf) {
         this.docId = docId;
         this.posList = Lists.newArrayList(posList);
@@ -74,11 +113,5 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
                 '}';
     }
 
-    public void write(Kryo kryo, Output output) {
 
-    }
-
-    public void read(Kryo kryo, Input input) {
-
-    }
 }

@@ -3,6 +3,7 @@ package com.search.engine.util;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
+import com.search.engine.pojo.DocIdAndRank;
 import com.search.engine.pojo.TermCodeAndTermInfoList;
 import com.search.engine.pojo.TermInfo;
 import com.search.engine.pojo.TermIntersection;
@@ -18,10 +19,11 @@ import java.util.Map;
 
 /**
  * Created by yjj on 15/11/22.
+ * 集合工具类，集合求交
  */
-public class SortUtil {
+public class GatherUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(SortUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(GatherUtil.class);
 
     private static List<TermIntersection> intersectionByBinSearch(int leftCode, List<TermInfo> left, int rightCode, List<TermInfo> right) {
 
@@ -180,41 +182,49 @@ public class SortUtil {
         return res;
     }
 
-    public static int[] getNext(String string) {
 
-        int size = string.length();
+    public static void topN(List<DocIdAndRank> docIdAndRankResultList, int docId, double rank, int topN) {
 
-        int[] next = new int[size + 1];
-
-        for (int i = 1; i < size; i++) {
-            next[i] = string.charAt(next[i - 1]) == string.charAt(i) ? next[i - 1] + 1 : 0;
+        if (docIdAndRankResultList.size() == 0) {
+            docIdAndRankResultList.add(new DocIdAndRank(docId, rank));
+            return;
         }
 
-        return next;
+        int flag = Ints.compare(docIdAndRankResultList.size(), topN);
+        if (flag == 0 && Double.compare(docIdAndRankResultList.get(0).getRank(), rank) > 0) {
+            return;
+        }
+
+        int index = Collections.binarySearch(docIdAndRankResultList, rank);
+        index = index < 0 ? Math.abs(index + 1) : index;
+        docIdAndRankResultList.add(index, new DocIdAndRank(docId, rank));
+
+        if (docIdAndRankResultList.size() > topN) {
+            docIdAndRankResultList.remove(0);
+        }
 
     }
 
-    public static int contain(String src, String dst, int[] dstNext) {
 
-        if (dstNext == null) {
-            dstNext = getNext(dst);
+    public static void topN(List<DocIdAndRank> docIdAndRankResultList, DocIdAndRank docIdAndRank, int topN) {
+
+        if (docIdAndRankResultList.size() == 0) {
+            docIdAndRankResultList.add(docIdAndRank);
+            return;
         }
 
-        int i = 0, j = 0;
-        while (i < src.length() && j < dst.length()) {
-            if (src.charAt(i) == dst.charAt(j)) {
-                i++;
-                j++;
-                continue;
-            } else if (j == 0) {
-                i++;
-            } else {
-                j = dstNext[j - 1];
-            }
-
+        int flag = Ints.compare(docIdAndRankResultList.size(), topN);
+        if (flag == 0 && Double.compare(docIdAndRankResultList.get(0).getRank(), docIdAndRank.getRank()) > 0) {
+            return;
         }
 
-        return j == dst.length() ? i - j : -1;
+        int index = Collections.binarySearch(docIdAndRankResultList, docIdAndRank.getRank());
+        index = index < 0 ? Math.abs(index + 1) : index;
+        docIdAndRankResultList.add(index, docIdAndRank);
+
+        if (docIdAndRankResultList.size() > topN) {
+            docIdAndRankResultList.remove(0);
+        }
 
     }
 

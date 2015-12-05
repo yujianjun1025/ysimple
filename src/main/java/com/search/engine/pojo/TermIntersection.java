@@ -7,6 +7,7 @@ import java.util.Map;
 
 /**
  * Created by yjj on 15/12/4.
+ * 求交中间过程类
  */
 public class TermIntersection {
 
