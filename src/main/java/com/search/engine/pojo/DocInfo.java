@@ -11,8 +11,8 @@ import java.util.List;
  */
 public class DocInfo {
 
-    private int docId;
     List<FieldInfo> field = Lists.newArrayList();
+    private int docId;
 
     public DocInfo(Integer docId, int field, Integer worldCount, Multimap<String, Integer> worldPosition) {
         this.docId = docId;
@@ -23,15 +23,11 @@ public class DocInfo {
         return docId;
     }
 
-    public void setDocId(Integer docId) {
-        this.docId = docId;
-    }
-
-    public void setDocId(Integer docId) {
-        this.docId = docId;
-    }
-
     public void setDocId(int docId) {
+        this.docId = docId;
+    }
+
+    public void setDocId(Integer docId) {
         this.docId = docId;
     }
 
