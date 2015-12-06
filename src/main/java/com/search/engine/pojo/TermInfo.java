@@ -19,16 +19,36 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
 
     private int docId;
     private List<Integer> posList = Lists.newArrayList();
-    private int tf;
     private double rank;
+
+    //低8位为fieldId,高24为tf
+    private int fieldAndTf;
+
+    public int getFieldId() {
+        return (fieldAndTf & 0x000000ff);
+    }
+
+    public int getTf() {
+        return (fieldAndTf & 0xffffff00) >>> 8;
+    }
+
+    public void setFieldAndTf(int fieldId, int tf) {
+        fieldAndTf |= tf & 0xffffff00;
+        fieldAndTf |= fieldId & 0x000000ff;
+    }
 
     public TermInfo() {
     }
 
-    public TermInfo(Integer docId, Collection<Integer> posList, int tf) {
+    public void setFieldAndTf(int fieldId, int tf) {
+        fieldAndTf |= tf & 0xffffff00;
+        fieldAndTf |= fieldId & 0x000000ff;
+    }
+
+    public TermInfo(Integer docId, int fieldId, Collection<Integer> posList, int tf) {
         this.docId = docId;
+        setFieldAndTf(fieldId, tf);
         this.posList = Lists.newArrayList(posList);
-        this.tf = tf;
     }
 
     public int compareTo(Integer o) {
@@ -52,14 +72,6 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
     }
 
 
-    public int getTf() {
-        return tf;
-    }
-
-    public void setTf(int tf) {
-        this.tf = tf;
-    }
-
     public double getRank() {
         return rank;
     }
@@ -68,27 +80,28 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
         this.rank = rank;
     }
 
+
     public void write(Kryo kryo, Output output) {
 
-        output.writeInt(docId);
+     /*   output.writeInt(docId);
         output.writeInt(posList.size());
         for (Integer pos : posList) {
             output.writeInt(pos);
         }
         output.writeInt(tf);
-        output.writeDouble(rank);
+        output.writeDouble(rank);*/
     }
 
     public void read(Kryo kryo, Input input) {
 
-        docId = input.readInt();
+       /* docId = input.readInt();
         int posSize = input.readInt();
         posList = Lists.newArrayList();
         for (int i = 0; i < posSize; i++) {
             posList.add(input.readInt());
         }
         tf = input.readInt();
-        rank = input.readDouble();
+        rank = input.readDouble();*/
 
     }
 
@@ -97,7 +110,7 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
         return "InvertDocInfo{" +
                 "docId=" + docId +
                 ", posList=" + Joiner.on(" ").join(posList) +
-                ", tf=" + tf +
+                // ", tf=" + tf +
                 ", rank=" + rank +
                 '}';
     }

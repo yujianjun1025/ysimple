@@ -111,7 +111,8 @@ public class RefreshTask {
                     pos++;
                 }
 
-                DocInfo docInfo = new DocInfo(doc.getDocId(), splitWorld.size(), worldPosition);
+                //默认fieldId = 1
+                DocInfo docInfo = new DocInfo(doc.getDocId(), 1, splitWorld.size(), worldPosition);
                 invertCache.addDocInfo(docInfo);
             }
 

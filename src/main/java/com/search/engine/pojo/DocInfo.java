@@ -1,8 +1,9 @@
 package com.search.engine.pojo;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+
+import java.util.List;
 
 /**
  * Created by yjj on 15/11/29.
@@ -11,13 +12,11 @@ import com.google.common.collect.Multimap;
 public class DocInfo {
 
     private int docId;
-    private int worldCount;
-    private Multimap<String, Integer> worldPosition = ArrayListMultimap.create();
+    List<FieldInfo> field = Lists.newArrayList();
 
-    public DocInfo(Integer docId, Integer worldCount, Multimap<String, Integer> worldPosition) {
+    public DocInfo(Integer docId, int field, Integer worldCount, Multimap<String, Integer> worldPosition) {
         this.docId = docId;
-        this.worldCount = worldCount;
-        this.worldPosition = worldPosition;
+        this.field = Lists.newArrayList(new FieldInfo(field, worldCount, worldPosition));
     }
 
     public Integer getDocId() {
@@ -28,33 +27,20 @@ public class DocInfo {
         this.docId = docId;
     }
 
-    public Integer getWorldCount() {
-        return worldCount;
+    public void setDocId(Integer docId) {
+        this.docId = docId;
     }
 
-    public void setWorldCount(Integer worldCount) {
-        this.worldCount = worldCount;
+    public void setDocId(int docId) {
+        this.docId = docId;
     }
 
-    public Multimap<String, Integer> getWorldPosition() {
-        return worldPosition;
+    public List<FieldInfo> getField() {
+        return field;
     }
 
-    public void setWorldPosition(Multimap<String, Integer> worldPosition) {
-        this.worldPosition = worldPosition;
+    public void setField(List<FieldInfo> field) {
+        this.field = field;
     }
-
-    @Override
-    public String toString() {
-
-
-        return "DocInfo{" +
-                "docId=" + docId +
-                ", worldCount=" + worldCount +
-                ", worldPosition=" + Joiner.on(",").withKeyValueSeparator("=>").join(worldPosition.entries()) +
-                '}';
-
-    }
-
 
 }

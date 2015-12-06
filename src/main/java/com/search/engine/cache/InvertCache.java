@@ -8,6 +8,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.search.engine.pojo.DocInfo;
+import com.search.engine.pojo.FieldInfo;
 import com.search.engine.pojo.TermInfo;
 import com.search.engine.util.SegUtil;
 import org.slf4j.Logger;
@@ -62,29 +63,36 @@ public class InvertCache implements KryoSerializable {
     public void addDocInfo(DocInfo docInfo) {
 
         DOC_COUNT++;
-        for (Map.Entry<String, Collection<Integer>> entry : docInfo.getWorldPosition().asMap().entrySet()) {
 
+        int docId = docInfo.getDocId();
+        for (FieldInfo fieldInfo : docInfo.getField()) {
+            int fieldId = fieldInfo.getField();
+            for (Map.Entry<String, Collection<Integer>> entry : fieldInfo.getWorldPosition().asMap().entrySet()) {
 
-            String world = entry.getKey();
-            if (!str2int.containsKey(world.intern())) {
-                str2int.put(world.intern(), WORD_COUNT++);
+                String world = entry.getKey();
+                if (!str2int.containsKey(world.intern())) {
+                    str2int.put(world.intern(), WORD_COUNT++);
+                }
+                Integer stringCode = str2int.get(world);
+
+                List<TermInfo> termInfoList = invertCache.get(stringCode);
+                if (termInfoList == null) {
+                    termInfoList = Lists.newArrayList();
+                    invertCache.put(stringCode, termInfoList);
+                }
+
+                int index = Collections.binarySearch(termInfoList, docId);
+                if (index < 0) {
+
+                    int tf = (entry.getValue().size() * 1000) / fieldInfo.getWorldCount();
+                    TermInfo termInfo = new TermInfo(docId, fieldId, entry.getValue(), tf);
+                    termInfoList.add(Math.abs(index + 1), termInfo);
+                }
             }
-            Integer stringCode = str2int.get(world);
 
-            List<TermInfo> termInfoList = invertCache.get(stringCode);
-            if (termInfoList == null) {
-                termInfoList = Lists.newArrayList();
-                invertCache.put(stringCode, termInfoList);
-            }
 
-            int index = Collections.binarySearch(termInfoList, docInfo.getDocId());
-            if (index < 0) {
-
-                int tf = (entry.getValue().size() * 1000) / docInfo.getWorldCount();
-                TermInfo termInfo = new TermInfo(docInfo.getDocId(), entry.getValue(), tf);
-                termInfoList.add(Math.abs(index + 1), termInfo);
-            }
         }
+
 
     }
 
