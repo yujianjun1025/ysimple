@@ -229,17 +229,5 @@ public class GatherUtil {
     }
 
 
-    public static List<Integer> bitArrayToList(BitArray bitArray) {
-
-        List<Integer> res = Lists.newArrayList();
-        for (int i = 0; i < bitArray.length(); i++) {
-
-            if (bitArray.get(i)) {
-                res.add(i);
-            }
-        }
-
-        return res;
-    }
 
 }
