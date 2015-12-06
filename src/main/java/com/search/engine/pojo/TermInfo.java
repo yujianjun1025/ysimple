@@ -24,6 +24,15 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
     //低8位为fieldId,高24为tf
     private int fieldAndTf;
 
+    public TermInfo() {
+    }
+
+    public TermInfo(Integer docId, int fieldId, Collection<Integer> posList, int tf) {
+        this.docId = docId;
+        setFieldAndTf(fieldId, tf);
+        this.posList = Lists.newArrayList(posList);
+    }
+
     public int getFieldId() {
         return (fieldAndTf & 0x000000ff);
     }
@@ -35,20 +44,6 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
     public void setFieldAndTf(int fieldId, int tf) {
         fieldAndTf |= tf & 0xffffff00;
         fieldAndTf |= fieldId & 0x000000ff;
-    }
-
-    public TermInfo() {
-    }
-
-    public void setFieldAndTf(int fieldId, int tf) {
-        fieldAndTf |= tf & 0xffffff00;
-        fieldAndTf |= fieldId & 0x000000ff;
-    }
-
-    public TermInfo(Integer docId, int fieldId, Collection<Integer> posList, int tf) {
-        this.docId = docId;
-        setFieldAndTf(fieldId, tf);
-        this.posList = Lists.newArrayList(posList);
     }
 
     public int compareTo(Integer o) {
