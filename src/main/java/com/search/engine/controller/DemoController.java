@@ -29,7 +29,7 @@ public class DemoController {
         try {
 
             int topN = limit != null ? limit : 3000;
-            res.put("data", tightnessSearch.doSearch(query, topN));
+            res.put("data", tightnessSearch.doSearch(query, 1, topN));
             res.put("ret", true);
 
         } catch (Exception e) {

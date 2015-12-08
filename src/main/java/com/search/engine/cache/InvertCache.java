@@ -8,6 +8,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.search.engine.pojo.DocInfo;
+import com.search.engine.pojo.FieldAndDocId;
 import com.search.engine.pojo.FieldInfo;
 import com.search.engine.pojo.TermInfo;
 import com.search.engine.util.SegUtil;
@@ -37,9 +38,37 @@ public class InvertCache implements KryoSerializable {
         return InvertCache2Holder.instance;
     }
 
-    public List<TermInfo> getTermInfo(Integer stringCode) {
+    public List<TermInfo> getTermInfo(Integer stringCode, int field) {
         List<TermInfo> res = invertCache.get(stringCode);
-        return res != null ? res : Lists.<TermInfo>newArrayList();
+
+        if (res == null) {
+            return Lists.newArrayList();
+        }
+
+
+        FieldAndDocId min = new FieldAndDocId(field, Integer.MIN_VALUE);
+        int minIndex = Collections.binarySearch(res, min);
+        FieldAndDocId max = new FieldAndDocId(field, Integer.MAX_VALUE);
+        int maxIndex = Collections.binarySearch(res, max);
+
+
+        minIndex = Math.abs(minIndex + 1);
+        maxIndex = Math.abs(maxIndex + 1);
+
+        if (minIndex >= res.size()) {
+            return Lists.newArrayList();
+        }
+
+        if (maxIndex > res.size()) {
+            maxIndex = res.size();
+        }
+
+        if (Integer.compare(minIndex, maxIndex) == 0) {
+            return Lists.newArrayList();
+        }
+
+
+        return res.subList(minIndex, maxIndex);
     }
 
     private Integer str2Int(String string) {
@@ -86,6 +115,7 @@ public class InvertCache implements KryoSerializable {
 
                     int tf = (entry.getValue().size() * 1000) / fieldInfo.getWorldCount();
                     TermInfo termInfo = new TermInfo(docId, fieldId, entry.getValue(), tf);
+
                     termInfoList.add(Math.abs(index + 1), termInfo);
                 }
             }

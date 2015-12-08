@@ -41,7 +41,7 @@ public class TightnessSearch {
         return SearchHolder.instance;
     }
 
-    public List<TermIntersection> getDocIdIntersection(List<Integer> termCodeList) {
+    public List<TermIntersection> getDocIdIntersection(List<Integer> termCodeList, int field) {
 
         if (CollectionUtils.isEmpty(termCodeList)) {
             return Lists.newArrayList();
@@ -51,7 +51,7 @@ public class TightnessSearch {
         List<TermCodeAndTermInfoList> termCodeAndTermInfoLists = Lists.newArrayList();
 
         for (Integer termCode : termCodeList) {
-            termCodeAndTermInfoLists.add(new TermCodeAndTermInfoList(termCode, invertCache.getTermInfo(termCode)));
+            termCodeAndTermInfoLists.add(new TermCodeAndTermInfoList(termCode, invertCache.getTermInfo(termCode, field)));
         }
 
         List<TermIntersection> res = GatherUtil.intersectionByBinSearch(termCodeAndTermInfoLists);
@@ -144,11 +144,11 @@ public class TightnessSearch {
 
     }
 
-    public List<DocIdAndRank> doSearch(final String query, final int topN) {
+    public List<DocIdAndRank> doSearch(final String query, final int field, final int topN) {
 
         long begin = System.nanoTime();
         final List<Integer> termCodeList = invertCache.getTermCodeListByQuery(query);
-        List<TermIntersection> termIntersection = getDocIdIntersection(termCodeList);
+        List<TermIntersection> termIntersection = getDocIdIntersection(termCodeList, field);
         long end = System.nanoTime();
         logger.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
         begin = end;
@@ -161,7 +161,6 @@ public class TightnessSearch {
 
             threadPool.submit(new Runnable() {
                 public void run() {
-
 
                     try {
 

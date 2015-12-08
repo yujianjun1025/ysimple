@@ -7,6 +7,8 @@ import com.esotericsoftware.kryo.io.Output;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,7 +17,8 @@ import java.util.List;
  * Created by yjj on 15/12/4.
  * term信息
  */
-public class TermInfo implements Comparable<Integer>, KryoSerializable {
+public class TermInfo implements Comparable<Object>, KryoSerializable {
+    private static final Logger logger = LoggerFactory.getLogger(TermInfo.class);
 
     private int docId;
     private List<Integer> posList = Lists.newArrayList();
@@ -46,8 +49,18 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
         fieldAndTf |= fieldId & 0x000000ff;
     }
 
-    public int compareTo(Integer o) {
-        return Ints.compare(docId, o);
+    public int compareTo(Object o) {
+
+
+        if (o instanceof Integer) {
+
+            return Integer.compare(docId, (Integer) o);
+        } else if (o instanceof FieldAndDocId) {
+            int res = Ints.compare(getFieldId(), ((FieldAndDocId) o).getFieldId());
+            return res != 0 ? res : Ints.compare(docId, ((FieldAndDocId) o).getDocId());
+        }
+
+        return 0;
     }
 
     public int getDocId() {
@@ -102,13 +115,12 @@ public class TermInfo implements Comparable<Integer>, KryoSerializable {
 
     @Override
     public String toString() {
-        return "InvertDocInfo{" +
+        return "TermInfo{" +
                 "docId=" + docId +
                 ", posList=" + Joiner.on(" ").join(posList) +
-                // ", tf=" + tf +
                 ", rank=" + rank +
+                ", fieldId=" + getFieldId() +
+                ", tf= " + getTf() +
                 '}';
     }
-
-
 }
