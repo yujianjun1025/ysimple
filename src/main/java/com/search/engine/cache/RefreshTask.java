@@ -92,7 +92,7 @@ public class RefreshTask {
 
             Integer docId = 1;
             bufferedReader = new BufferedReader(new FileReader(new File(fileName)));
-            String tmpStr = null;
+            String tmpStr;
             while ((tmpStr = bufferedReader.readLine()) != null) {
 
                 tmpStr = tmpStr.trim();
@@ -119,7 +119,9 @@ public class RefreshTask {
         } finally {
 
             try {
-                bufferedReader.close();
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
             } catch (Exception e) {
                 logger.error("关闭bufferedReader时出现异常", e);
             }

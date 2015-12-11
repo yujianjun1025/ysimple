@@ -8,9 +8,6 @@ import com.search.engine.pojo.TermCodeAndTermInfoList;
 import com.search.engine.pojo.TermInfo;
 import com.search.engine.pojo.TermIntersection;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import sun.security.util.BitArray;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,20 +20,20 @@ import java.util.Map;
  */
 public class GatherUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(GatherUtil.class);
-
     private static List<TermIntersection> intersectionByBinSearch(int leftCode, List<TermInfo> left, int rightCode, List<TermInfo> right) {
 
         List<TermIntersection> res = Lists.newArrayList();
+        int min = 0;
+        int max = right.size();
         for (TermInfo termInfo : left) {
-            int index = Collections.binarySearch(right, termInfo.getDocId());
+            int index = Collections.binarySearch(right.subList(min, max), termInfo.getDocId());
             if (index >= 0) {
 
                 Map<Integer, TermInfo> termInfoMap = Maps.newHashMap();
                 termInfoMap.put(leftCode, termInfo);
                 termInfoMap.put(rightCode, right.get(index));
                 res.add(new TermIntersection(termInfo.getDocId(), termInfoMap));
-
+                min = index;
             }
         }
 
@@ -102,13 +99,16 @@ public class GatherUtil {
         List<TermIntersection> res = Lists.newArrayList();
 
 
+        int min = 0;
+        int max = right.size();
         for (TermIntersection termIntersection : termIntersectionList) {
 
-            int index = Collections.binarySearch(right, termIntersection.getDocId());
+            int index = Collections.binarySearch(right.subList(min, max), termIntersection.getDocId());
             if (index > 0) {
                 Map<Integer, TermInfo> termInfoMap = termIntersection.getTermInfoMap();
                 termInfoMap.put(rightCode, right.get(index));
                 res.add(new TermIntersection(termIntersection.getDocId(), termInfoMap));
+                min = index;
             }
 
         }
@@ -165,7 +165,7 @@ public class GatherUtil {
             }
         });
 
-        List<TermIntersection> res = Lists.newArrayList();
+        List<TermIntersection> res;
         // logger.info("需要求交集合排序后结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
         if (termCodeAndTermInfoList.size() == 1) {
             res = intersectionOnlyOne(termCodeAndTermInfoList);

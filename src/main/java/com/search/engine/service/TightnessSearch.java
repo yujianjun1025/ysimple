@@ -1,6 +1,7 @@
 package com.search.engine.service;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import com.search.engine.cache.InvertCache;
 import com.search.engine.pojo.DocIdAndRank;
@@ -12,9 +13,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -30,9 +29,13 @@ public class TightnessSearch {
     private static final Logger logger = LoggerFactory.getLogger(TightnessSearch.class);
 
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
-
+    Ordering<AssembleNode> ordering = new Ordering<AssembleNode>() {
+        @Override
+        public int compare(AssembleNode left, AssembleNode right) {
+            return Ints.compare(left.getTermInfo().getPosList().size(), right.getTermInfo().getPosList().size());
+        }
+    };
     private InvertCache invertCache = InvertCache.getInstance();
-
 
     private TightnessSearch() {
     }
@@ -54,10 +57,8 @@ public class TightnessSearch {
             termCodeAndTermInfoLists.add(new TermCodeAndTermInfoList(termCode, invertCache.getTermInfo(termCode, field)));
         }
 
-        List<TermIntersection> res = GatherUtil.intersectionByBinSearch(termCodeAndTermInfoLists);
-        return res;
+        return GatherUtil.intersectionByBinSearch(termCodeAndTermInfoLists);
     }
-
 
     public List<DocIdAndRank> assembleDoc(List<TermIntersection> termIntersectionList, List<Integer> termCodeList, int topN) {
 
@@ -68,35 +69,14 @@ public class TightnessSearch {
 
             //logger.info("需要过滤的信息:\n{}", termIntersection.toString());
             int order = 1;
-            AssembleNode[] orderBySizeAssembleNode = new AssembleNode[termCodeList.size()];
             List<AssembleNode> assembleNodeListOrigin = Lists.newArrayList();
-            for (int i = 0; i < termCodeList.size(); i++) {
-                int termCode = termCodeList.get(i);
+            for (Integer aTermCodeList : termCodeList) {
+                int termCode = aTermCodeList;
                 AssembleNode assembleNode = new AssembleNode(termCode, order++, termIntersection.getTermInfoMap().get(termCode));
                 assembleNodeListOrigin.add(assembleNode);
-                orderBySizeAssembleNode[i] = assembleNode;
-
             }
-
-            //logger.info("排序前nodeList:\n{}", Joiner.on("\n").join(assembleNodeList));
-            Arrays.sort(orderBySizeAssembleNode, new Comparator<AssembleNode>() {
-                public int compare(AssembleNode o1, AssembleNode o2) {
-                    return Ints.compare(o1.getTermInfo().getPosList().size(), o2.getTermInfo().getPosList().size());
-                }
-            });
-
-
-            //assembleNodeList = Lists.newArrayList(a);
-
-           /* Collections.sort(assembleNodeList, new Comparator<AssembleNode>() {
-                public int compare(AssembleNode o1, AssembleNode o2) {
-                    return Ints.compare(o1.getTermInfo().getPosList().size(), o2.getTermInfo().getPosList().size());
-                }
-            });*/
-
-            //logger.info("排序后nodeList:\n{}", Joiner.on("\n").join(assembleNodeList));
-
-            int lastOrder = orderBySizeAssembleNode[0].getOrder();
+            List<AssembleNode> orderBySizeAssembleNode = ordering.sortedCopy(assembleNodeListOrigin);
+            int lastOrder = orderBySizeAssembleNode.get(0).getOrder();
             for (AssembleNode assembleNode : orderBySizeAssembleNode) {
                 int offset = assembleNode.getOrder() - lastOrder;
                 assembleNode.setOffset(offset);
@@ -105,21 +85,21 @@ public class TightnessSearch {
 
             //logger.info("计算offset后的nodeList:\n{}", Joiner.on("\n").join(assembleNodeList));
 
-            if (orderBySizeAssembleNode.length <= 1) {
-                GatherUtil.topN(res, orderBySizeAssembleNode[0].getTermInfo().getDocId(),
-                        orderBySizeAssembleNode[0].getTermInfo().getRank(), topN);
+            if (orderBySizeAssembleNode.size() <= 1) {
+                GatherUtil.topN(res, orderBySizeAssembleNode.get(0).getTermInfo().getDocId(),
+                        orderBySizeAssembleNode.get(0).getTermInfo().getRank(), topN);
                 //res.add(assembleNodeList.get(0).getTermInfo().getDocId());
                 continue;
             }
 
-            for (int firstPos : orderBySizeAssembleNode[0].getTermInfo().getPosList()) {
+            for (int firstPos : orderBySizeAssembleNode.get(0).getTermInfo().getPosList()) {
 
                 boolean flag = true;
                 int next = firstPos;
-                for (int j = 1; j < orderBySizeAssembleNode.length; j++) {
+                for (int j = 1; j < orderBySizeAssembleNode.size(); j++) {
 
-                    next = next + orderBySizeAssembleNode[j].getOffset();
-                    int index = Collections.binarySearch(orderBySizeAssembleNode[j].getTermInfo().getPosList(), next);
+                    next = next + orderBySizeAssembleNode.get(j).getOffset();
+                    int index = Collections.binarySearch(orderBySizeAssembleNode.get(j).getTermInfo().getPosList(), next);
                     if (index < 0) {
                         flag = false;
                         break;
@@ -148,10 +128,16 @@ public class TightnessSearch {
 
         long begin = System.nanoTime();
         final List<Integer> termCodeList = invertCache.getTermCodeListByQuery(query);
+
         List<TermIntersection> termIntersection = getDocIdIntersection(termCodeList, field);
         long end = System.nanoTime();
         logger.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
         begin = end;
+
+        if (CollectionUtils.isEmpty(termCodeList)) {
+            logger.info("termCodeList为 0， 不继续查询");
+            return Lists.newArrayList();
+        }
 
         final List<DocIdAndRank> docIdAndRankRes = Lists.newArrayList();
         final Object object = new Object();

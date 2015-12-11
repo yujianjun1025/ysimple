@@ -17,11 +17,11 @@ import java.util.Map;
 
 /**
  * Created by yjj on 15/12/11.
+ * 倒排索引类
  */
 public class InvertCache {
 
 
-    private static final long serialVersionUID = -2385906232920579818L;
     private static final Logger logger = LoggerFactory.getLogger(InvertCache.class);
 
     private int WORD_COUNT = 0;
@@ -101,7 +101,7 @@ public class InvertCache {
                 }
                 Integer stringCode = str2int.get(world);
 
-                List<TermInfo> termInfoList = null;
+                List<TermInfo> termInfoList;
                 int length = invertCache.size();
 
                 if (stringCode >= length) {
