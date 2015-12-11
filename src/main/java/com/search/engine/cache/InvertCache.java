@@ -1,10 +1,5 @@
 package com.search.engine.cache;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.KryoSerializable;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.search.engine.pojo.DocInfo;
@@ -21,21 +16,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by yjj on 15/11/29.
- * 倒排缓存类
+ * Created by yjj on 15/12/11.
  */
-public class InvertCache implements KryoSerializable {
+public class InvertCache {
+
 
     private static final long serialVersionUID = -2385906232920579818L;
     private static final Logger logger = LoggerFactory.getLogger(InvertCache.class);
 
     private int WORD_COUNT = 0;
     private int DOC_COUNT = 0;
-    private Map<Integer, List<TermInfo>> invertCache = Maps.newHashMap();
+
+
+    private List<List<TermInfo>> invertCache = Lists.newArrayList();
     private Map<String, Integer> str2int = Maps.newHashMap();
 
     public static InvertCache getInstance() {
-        return InvertCache2Holder.instance;
+        return InvertCacheHolder.instance;
     }
 
     public List<TermInfo> getTermInfo(Integer stringCode, int field) {
@@ -104,10 +101,18 @@ public class InvertCache implements KryoSerializable {
                 }
                 Integer stringCode = str2int.get(world);
 
-                List<TermInfo> termInfoList = invertCache.get(stringCode);
+                List<TermInfo> termInfoList = null;
+                int length = invertCache.size();
+
+                if (stringCode >= length) {
+                    termInfoList = Lists.newArrayList();
+                    invertCache.add(stringCode, termInfoList);
+                }
+
+                termInfoList = invertCache.get(stringCode);
                 if (termInfoList == null) {
                     termInfoList = Lists.newArrayList();
-                    invertCache.put(stringCode, termInfoList);
+                    invertCache.add(stringCode, termInfoList);
                 }
 
                 int index = Collections.binarySearch(termInfoList, docId);
@@ -120,7 +125,6 @@ public class InvertCache implements KryoSerializable {
                 }
             }
 
-
         }
 
 
@@ -129,10 +133,10 @@ public class InvertCache implements KryoSerializable {
     public void calculateRank() {
 
         long begin = System.currentTimeMillis();
-        for (Map.Entry<Integer, List<TermInfo>> entry : invertCache.entrySet()) {
+        for (List<TermInfo> entry : invertCache) {
 
-            double idf = Math.log(DOC_COUNT / entry.getValue().size());
-            for (TermInfo termInfo : entry.getValue()) {
+            double idf = Math.log(DOC_COUNT / entry.size());
+            for (TermInfo termInfo : entry) {
                 double rank = idf * termInfo.getTf();
                 termInfo.setRank(rank);
             }
@@ -142,64 +146,7 @@ public class InvertCache implements KryoSerializable {
 
     }
 
-    public void write(Kryo kryo, Output output) {
-
-        output.writeInt(WORD_COUNT);
-        output.writeInt(DOC_COUNT);
-        output.writeInt(str2int.size());
-        for (Map.Entry<String, Integer> entry : str2int.entrySet()) {
-            output.writeString(entry.getKey());
-            output.writeInt(entry.getValue());
-        }
-
-        output.writeInt(invertCache.size());
-        for (Map.Entry<Integer, List<TermInfo>> entry : invertCache.entrySet()) {
-            output.writeInt(entry.getKey());
-            output.writeInt(entry.getValue().size());
-            for (TermInfo termInfo : entry.getValue()) {
-                termInfo.write(kryo, output);
-            }
-        }
-    }
-
-    public void read(Kryo kryo, Input input) {
-
-        WORD_COUNT = input.readInt();
-        DOC_COUNT = input.readInt();
-        int str2intSize = input.readInt();
-        for (int i = 0; i < str2intSize; i++) {
-            str2int.put(input.readString(), input.readInt());
-        }
-
-        int cacheSize = input.readInt();
-        for(int i = 0; i < cacheSize; i++){
-
-            int termCode = input.readInt();
-            int termSize = input.readInt();
-            List<TermInfo> termInfoList = Lists.newArrayList();
-            for(int j =0; j < termSize; j++){
-                TermInfo termInfo = new TermInfo();
-                termInfo.read(kryo, input);
-                termInfoList.add(termInfo);
-            }
-            invertCache.put(termCode, termInfoList);
-        }
-
-    }
-
-    @Override
-    public String toString() {
-
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (Map.Entry<Integer, List<TermInfo>> entry : invertCache.entrySet()) {
-            stringBuilder.append(entry.getKey()).append(":").append(Joiner.on(" ").join(entry.getValue())).append("\n");
-        }
-
-        return "InvertCache{\n" + stringBuilder.toString() + '}';
-    }
-
-    public static final class InvertCache2Holder {
+    public static final class InvertCacheHolder {
         private static final InvertCache instance = new InvertCache();
     }
 

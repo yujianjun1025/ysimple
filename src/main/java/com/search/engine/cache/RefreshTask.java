@@ -1,20 +1,18 @@
 package com.search.engine.cache;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.search.engine.pojo.Doc;
 import com.search.engine.pojo.DocInfo;
 import com.search.engine.util.SegUtil;
-import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.List;
 
 /**
@@ -131,39 +129,10 @@ public class RefreshTask {
 
     public void serialize(String fileName) {
 
-        try {
-
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
-            Output output = new Output(oos);
-            Kryo kryo = new Kryo();
-            kryo.setReferences(false);
-            kryo.setRegistrationRequired(false);
-            kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
-            kryo.register(InvertCache.class);
-            invertCache.write(kryo, output);
-
-        } catch (Exception e) {
-            logger.error("倒排序列化出现异常", e);
-        }
     }
 
     public void deserialize(String fileName) {
 
-        try {
-
-            Input input = new Input(new ObjectInputStream(new FileInputStream(fileName)));
-            Kryo kryo = new Kryo();
-            kryo.setReferences(false);
-            kryo.setRegistrationRequired(false);
-            kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
-
-            //invertCache = InvertCache.getInstance();
-            invertCache.read(kryo, input);
-
-        } catch (Exception e) {
-            logger.error("倒排反序列化时出现异常", e);
-
-        }
     }
 
 }
