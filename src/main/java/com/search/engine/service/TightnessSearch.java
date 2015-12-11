@@ -67,7 +67,6 @@ public class TightnessSearch {
         for (TermIntersection termIntersection : termIntersectionList) {
 
 
-            //logger.info("需要过滤的信息:\n{}", termIntersection.toString());
             int order = 1;
             List<AssembleNode> assembleNodeListOrigin = Lists.newArrayList();
             for (Integer aTermCodeList : termCodeList) {
@@ -83,12 +82,9 @@ public class TightnessSearch {
                 lastOrder = assembleNode.getOrder();
             }
 
-            //logger.info("计算offset后的nodeList:\n{}", Joiner.on("\n").join(assembleNodeList));
-
             if (orderBySizeAssembleNode.size() <= 1) {
                 GatherUtil.topN(res, orderBySizeAssembleNode.get(0).getTermInfo().getDocId(),
                         orderBySizeAssembleNode.get(0).getTermInfo().getRank(), topN);
-                //res.add(assembleNodeList.get(0).getTermInfo().getDocId());
                 continue;
             }
 
@@ -113,7 +109,6 @@ public class TightnessSearch {
                         rank = 10 * rank + assembleNode.getTermInfo().getRank();
                     }
                     GatherUtil.topN(res, termIntersection.getDocId(), rank, topN);
-                    //res.add(termIntersection.getDocId());
                     break;
                 }
             }
