@@ -14,7 +14,7 @@ public class DocInfo {
     List<FieldInfo> field = Lists.newArrayList();
     private int docId;
 
-    public DocInfo(Integer docId, int field, Integer worldCount, Multimap<String, Integer> worldPosition) {
+    public DocInfo(Integer docId, int field, Integer worldCount, Multimap<Integer, Integer> worldPosition) {
         this.docId = docId;
         this.field = Lists.newArrayList(new FieldInfo(field, worldCount, worldPosition));
     }

@@ -3,7 +3,6 @@ package com.search.engine.cache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.search.engine.pojo.DocInfo;
-import com.search.engine.pojo.FieldAndDocId;
 import com.search.engine.pojo.FieldInfo;
 import com.search.engine.pojo.TermInfo;
 import com.search.engine.util.SegUtil;
@@ -27,16 +26,22 @@ public class InvertCache {
     private int WORD_COUNT = 0;
     private int DOC_COUNT = 0;
 
-
-    private List<List<TermInfo>> invertCache = Lists.newArrayList();
+    private Map<Integer, List<Integer>> invertCache = Maps.newHashMap();
     private Map<String, Integer> str2int = Maps.newHashMap();
 
     public static InvertCache getInstance() {
         return InvertCacheHolder.instance;
     }
 
+    public List<Integer> getDocIdByTermCode(Integer termCode) {
+
+        List<Integer> res = invertCache.get(termCode);
+        return res != null ? res : Lists.<Integer>newArrayList();
+
+    }
+
     public List<TermInfo> getTermInfo(Integer stringCode, int field) {
-        List<TermInfo> res = invertCache.get(stringCode);
+       /* List<TermInfo> res = invertCache.get(stringCode);
 
         if (res == null) {
             return Lists.newArrayList();
@@ -65,11 +70,24 @@ public class InvertCache {
         }
 
 
-        return res.subList(minIndex, maxIndex);
+        return res.subList(minIndex, maxIndex);*/
+
+        return Lists.newArrayList();
     }
 
     private Integer str2Int(String string) {
         return str2int.get(String.valueOf(string));
+    }
+
+
+    public Integer putIfAbsent(String string) {
+
+        Integer value = str2int.get(string);
+        if (value == null) {
+            str2int.put(string, WORD_COUNT++);
+            return WORD_COUNT - 1;
+        }
+        return value;
     }
 
     public List<Integer> getTermCodeListByQuery(String query) {
@@ -86,6 +104,7 @@ public class InvertCache {
         return res;
     }
 
+
     public void addDocInfo(DocInfo docInfo) {
 
         DOC_COUNT++;
@@ -93,37 +112,25 @@ public class InvertCache {
         int docId = docInfo.getDocId();
         for (FieldInfo fieldInfo : docInfo.getField()) {
             int fieldId = fieldInfo.getField();
-            for (Map.Entry<String, Collection<Integer>> entry : fieldInfo.getWorldPosition().asMap().entrySet()) {
+            for (Map.Entry<Integer, Collection<Integer>> entry : fieldInfo.getWorldPosition().asMap().entrySet()) {
 
-                String world = entry.getKey();
-                if (!str2int.containsKey(world.intern())) {
-                    str2int.put(world.intern(), WORD_COUNT++);
-                }
-                Integer stringCode = str2int.get(world);
 
-                List<TermInfo> termInfoList;
-                int length = invertCache.size();
+                Integer termCode = entry.getKey();
 
-                if (stringCode >= length) {
-                    termInfoList = Lists.newArrayList();
-                    invertCache.add(stringCode, termInfoList);
-                }
-
-                termInfoList = invertCache.get(stringCode);
-                if (termInfoList == null) {
-                    termInfoList = Lists.newArrayList();
-                    invertCache.add(stringCode, termInfoList);
+                List<Integer> forwardInfoList = invertCache.get(termCode);
+                if (forwardInfoList == null) {
+                    forwardInfoList = Lists.newArrayList(docId);
+                    invertCache.put(termCode, forwardInfoList);
+                } else {
+                    int index = Collections.binarySearch(forwardInfoList, docId);
+                    if (index < 0) {
+                        index = Math.abs(index + 1);
+                        forwardInfoList.add(index, docId);
+                    }
                 }
 
-                int index = Collections.binarySearch(termInfoList, docId);
-                if (index < 0) {
-
-                    int tf = (entry.getValue().size() * 1000) / fieldInfo.getWorldCount();
-                    TermInfo termInfo = new TermInfo(docId, fieldId, entry.getValue(), tf);
-
-                    termInfoList.add(Math.abs(index + 1), termInfo);
-                }
             }
+
 
         }
 
@@ -132,7 +139,7 @@ public class InvertCache {
 
     public void calculateRank() {
 
-        long begin = System.currentTimeMillis();
+       /* long begin = System.currentTimeMillis();
         for (List<TermInfo> entry : invertCache) {
 
             double idf = Math.log(DOC_COUNT / entry.size());
@@ -143,7 +150,7 @@ public class InvertCache {
         }
         logger.info("完成rank值计算，耗时{}毫秒", System.currentTimeMillis() - begin);
         logger.info("str2int size:{},  invertCache size:{}", new Object[]{str2int.size(), invertCache.size()});
-
+*/
     }
 
     public static final class InvertCacheHolder {

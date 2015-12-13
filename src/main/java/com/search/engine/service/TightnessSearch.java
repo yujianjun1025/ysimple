@@ -2,10 +2,12 @@ package com.search.engine.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
+import com.search.engine.cache.ForwardCache;
 import com.search.engine.cache.InvertCache;
 import com.search.engine.pojo.DocIdAndRank;
-import com.search.engine.pojo.TermCodeAndTermInfoList;
+import com.search.engine.pojo.Node;
 import com.search.engine.pojo.TermInfo;
 import com.search.engine.pojo.TermIntersection;
 import com.search.engine.util.GatherUtil;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +39,7 @@ public class TightnessSearch {
         }
     };
     private InvertCache invertCache = InvertCache.getInstance();
+    private ForwardCache forwardCache = ForwardCache.getInstance();
 
     private TightnessSearch() {
     }
@@ -44,20 +48,21 @@ public class TightnessSearch {
         return SearchHolder.instance;
     }
 
-    public List<TermIntersection> getDocIdIntersection(List<Integer> termCodeList, int field) {
+    public List<Integer> getDocIdIntersection(List<Integer> termCodeList, int field) {
 
         if (CollectionUtils.isEmpty(termCodeList)) {
             return Lists.newArrayList();
         }
 
 
-        List<TermCodeAndTermInfoList> termCodeAndTermInfoLists = Lists.newArrayList();
+        Set<Integer> res = Sets.newHashSet(invertCache.getDocIdByTermCode(termCodeList.get(0)));
 
-        for (Integer termCode : termCodeList) {
-            termCodeAndTermInfoLists.add(new TermCodeAndTermInfoList(termCode, invertCache.getTermInfo(termCode, field)));
+        for (int i = 1; i < termCodeList.size(); i++) {
+            res = Sets.intersection(Sets.newHashSet(invertCache.getDocIdByTermCode(termCodeList.get(i))), res);
         }
 
-        return GatherUtil.intersectionByBinSearch(termCodeAndTermInfoLists);
+        return Lists.newArrayList(res);
+
     }
 
     public List<DocIdAndRank> assembleDoc(List<TermIntersection> termIntersectionList, List<Integer> termCodeList, int topN) {
@@ -124,7 +129,7 @@ public class TightnessSearch {
         long begin = System.nanoTime();
         final List<Integer> termCodeList = invertCache.getTermCodeListByQuery(query);
 
-        List<TermIntersection> termIntersection = getDocIdIntersection(termCodeList, field);
+        List<Integer> termIntersection = getDocIdIntersection(termCodeList, field);
         long end = System.nanoTime();
         logger.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
         begin = end;
@@ -136,21 +141,25 @@ public class TightnessSearch {
 
         final List<DocIdAndRank> docIdAndRankRes = Lists.newArrayList();
         final Object object = new Object();
-        List<List<TermIntersection>> partitions = Lists.partition(termIntersection, 500);
+        List<List<Integer>> partitions = Lists.partition(termIntersection, 500);
         final CountDownLatch countDownLatch = new CountDownLatch(partitions.size());
-        for (final List<TermIntersection> termIntersectionList : partitions) {
+        for (final List<Integer> termIntersectionList : partitions) {
 
             threadPool.submit(new Runnable() {
                 public void run() {
 
                     try {
 
-                        List<DocIdAndRank> tmpDocIdAndRankList = assembleDoc(termIntersectionList, termCodeList, topN);
-                        synchronized (object) {
-                            for (DocIdAndRank docIdAndRank : tmpDocIdAndRankList) {
-                                GatherUtil.topN(docIdAndRankRes, docIdAndRank, topN);
-                            }
+                        long begin = System.nanoTime();
+                        for (Integer docId : termIntersectionList) {
+                            List<Node> nodeList = forwardCache.getNodeByDocId(docId);
+                            //logger.info("反查文件内容{}", Joiner.on("\n").join(nodeList));
+                            //              nodeList.get(0);
                         }
+
+                        long end = System.nanoTime();
+
+                        logger.info("获取docIds size:{}, 耗时{}毫秒", new Object[]{termIntersectionList.size(), (1.0 * (end - begin)) / 1000000});
 
                     } catch (Exception e) {
                         logger.error("assembleDoc时出现异常", e);

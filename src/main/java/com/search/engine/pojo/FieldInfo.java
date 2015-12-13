@@ -9,9 +9,9 @@ import com.google.common.collect.Multimap;
 public class FieldInfo {
     private int field;
     private int worldCount;
-    private Multimap<String, Integer> worldPosition = ArrayListMultimap.create();
+    private Multimap<Integer, Integer> worldPosition = ArrayListMultimap.create();
 
-    public FieldInfo(int field, int worldCount, Multimap<String, Integer> worldPosition) {
+    public FieldInfo(int field, int worldCount, Multimap<Integer, Integer> worldPosition) {
         this.field = field;
         this.worldCount = worldCount;
         this.worldPosition = worldPosition;
@@ -33,11 +33,11 @@ public class FieldInfo {
         this.worldCount = worldCount;
     }
 
-    public Multimap<String, Integer> getWorldPosition() {
+    public Multimap<Integer, Integer> getWorldPosition() {
         return worldPosition;
     }
 
-    public void setWorldPosition(Multimap<String, Integer> worldPosition) {
+    public void setWorldPosition(Multimap<Integer, Integer> worldPosition) {
         this.worldPosition = worldPosition;
     }
 }
