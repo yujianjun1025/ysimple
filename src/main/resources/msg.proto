@@ -1,0 +1,15 @@
+option java_package = "com.search.engine.protobuf";
+option java_outer_classname = "InvertPro";
+
+
+message TermInOneDoc{
+    required int32 docId = 1;
+    required int32 field = 2;
+    optional int32  tf = 3;
+    optional double rank = 4;
+    repeated int32  positions = 5;
+}
+
+message TermInfo{
+   repeated TermInOneDoc  termInDocList = 1;
+} 
