@@ -1,6 +1,7 @@
 package com.search.engine.pojo;
 
 import com.google.common.base.Joiner;
+import com.search.engine.protobuf.InvertPro;
 
 import java.util.List;
 
@@ -11,11 +12,11 @@ import java.util.List;
 public class TermCodeAndTermInfoList {
 
     private Integer termCode;
-    private List<TermInfo> termInfoList;
+    private List<InvertPro.TermInOneDoc> termInOneDocList;
 
-    public TermCodeAndTermInfoList(Integer termCode, List<TermInfo> termInfoList) {
+    public TermCodeAndTermInfoList(Integer termCode, List<InvertPro.TermInOneDoc> termInOneDocList) {
         this.termCode = termCode;
-        this.termInfoList = termInfoList;
+        this.termInOneDocList = termInOneDocList;
     }
 
     public Integer getTermCode() {
@@ -26,19 +27,19 @@ public class TermCodeAndTermInfoList {
         this.termCode = termCode;
     }
 
-    public List<TermInfo> getTermInfoList() {
-        return termInfoList;
+    public List<InvertPro.TermInOneDoc> getTermInOneDocList() {
+        return termInOneDocList;
     }
 
-    public void setTermInfoList(List<TermInfo> termInfoList) {
-        this.termInfoList = termInfoList;
+    public void setTermInOneDocList(List<InvertPro.TermInOneDoc> termInOneDocList) {
+        this.termInOneDocList = termInOneDocList;
     }
 
     @Override
     public String toString() {
         return "TermCodeAndTermInfoList{" +
                 "termCode=" + termCode +
-                ", termInfoList=" + Joiner.on(" ").join(termInfoList) +
+                ", termInOneDocList=" + Joiner.on(" ").join(termInOneDocList) +
                 '}';
     }
 }

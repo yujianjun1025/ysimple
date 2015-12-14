@@ -20,7 +20,7 @@
         </filter>
         <file>${fileDir}error.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${fileDir}datamanager.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <FileNamePattern>${fileDir}error.log.%d{yyyy-MM-dd}</FileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>${patternLayout}</pattern>
@@ -35,7 +35,7 @@
         </filter>
         <file>${fileDir}info.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${fileDir}datamanager.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <FileNamePattern>${fileDir}info.log.%d{yyyy-MM-dd}</FileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>${patternLayout}</pattern>
@@ -50,7 +50,7 @@
         </filter>
         <file>${fileDir}debug.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${fileDir}datamanager.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <FileNamePattern>${fileDir}debug.log.%d{yyyy-MM-dd}</FileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>${patternLayout}</pattern>

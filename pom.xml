@@ -214,6 +214,13 @@
                 <version>0.9</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>3.0.0-beta-1</version>
+            </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 
@@ -340,6 +347,12 @@
             <groupId>org.ansj</groupId>
             <artifactId>ansj_seg</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+        </dependency>
+
     </dependencies>
 
     <profiles>

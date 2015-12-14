@@ -30,36 +30,23 @@ public class RefreshTask {
     private static long lastModified = 0;
     private static InvertCache invertCache = InvertCache.getInstance();
 
+    private static int flag = 1;
     @PostConstruct
     private void start() {
 
-        logger.info("启动初始化倒排索引任务");
-        new Thread(new Runnable() {
 
-
-            public void run() {
-
-                while (true) {
-
-                    File file = new File(TXT_FILE);
-                    long tmpVersion = file.lastModified();
-                    if (tmpVersion > lastModified) {
-                        buildIndex(TXT_FILE);
-                        lastModified = tmpVersion;
-
-                        //考虑内存还不理想，暂时不支持文件更新自动加载
-                        break;
-                    }
-
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        logger.error("线程休眠出现异常", e);
-                    }
-                }
-
+        synchronized (RefreshTask.class) {
+            if (flag == 1) {
+                flag = 0;
+                logger.info("启动初始化倒排索引任务");
+                buildIndex(TXT_FILE);
+            } else {
+                logger.info("重复加载了索引任务");
             }
-        }).start();
+
+        }
+
+
     }
 
 
@@ -80,9 +67,9 @@ public class RefreshTask {
 
         begin = end;
         logger.info("开始序列化");
-       // serialize(SERIAL_FILE);
+        invertCache.mem2disk();
         end = System.currentTimeMillis();
-        logger.info("序列化完成{}", end - begin);
+        logger.info("序列化完成耗时{}毫秒", end - begin);
 
     }
 
@@ -127,14 +114,6 @@ public class RefreshTask {
             }
 
         }
-    }
-
-    public void serialize(String fileName) {
-
-    }
-
-    public void deserialize(String fileName) {
-
     }
 
 }

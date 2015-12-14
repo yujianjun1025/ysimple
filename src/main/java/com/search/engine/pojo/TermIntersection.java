@@ -2,6 +2,7 @@ package com.search.engine.pojo;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
+import com.search.engine.protobuf.InvertPro;
 
 import java.util.Map;
 
@@ -13,9 +14,9 @@ public class TermIntersection {
 
 
     private int docId;
-    private Map<Integer, TermInfo> termInfoMap = Maps.newHashMap();
+    private Map<Integer, InvertPro.TermInOneDoc> termInfoMap = Maps.newHashMap();
 
-    public TermIntersection(int docId, Map<Integer, TermInfo> termInfoMap) {
+    public TermIntersection(int docId, Map<Integer, InvertPro.TermInOneDoc> termInfoMap) {
         this.docId = docId;
         this.termInfoMap = termInfoMap;
     }
@@ -28,11 +29,11 @@ public class TermIntersection {
         this.docId = docId;
     }
 
-    public Map<Integer, TermInfo> getTermInfoMap() {
+    public Map<Integer, InvertPro.TermInOneDoc> getTermInfoMap() {
         return termInfoMap;
     }
 
-    public void setTermInfoMap(Map<Integer, TermInfo> termInfoMap) {
+    public void setTermInfoMap(Map<Integer, InvertPro.TermInOneDoc> termInfoMap) {
         this.termInfoMap = termInfoMap;
     }
 

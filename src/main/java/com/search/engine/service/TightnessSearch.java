@@ -6,8 +6,8 @@ import com.google.common.primitives.Ints;
 import com.search.engine.cache.InvertCache;
 import com.search.engine.pojo.DocIdAndRank;
 import com.search.engine.pojo.TermCodeAndTermInfoList;
-import com.search.engine.pojo.TermInfo;
 import com.search.engine.pojo.TermIntersection;
+import com.search.engine.protobuf.InvertPro;
 import com.search.engine.util.GatherUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ public class TightnessSearch {
     Ordering<AssembleNode> ordering = new Ordering<AssembleNode>() {
         @Override
         public int compare(AssembleNode left, AssembleNode right) {
-            return Ints.compare(left.getTermInfo().getPosList().size(), right.getTermInfo().getPosList().size());
+            return Ints.compare(left.getTermInOneDoc().getPositionsList().size(), right.getTermInOneDoc().getPositionsList().size());
         }
     };
     private InvertCache invertCache = InvertCache.getInstance();
@@ -83,19 +83,19 @@ public class TightnessSearch {
             }
 
             if (orderBySizeAssembleNode.size() <= 1) {
-                GatherUtil.topN(res, orderBySizeAssembleNode.get(0).getTermInfo().getDocId(),
-                        orderBySizeAssembleNode.get(0).getTermInfo().getRank(), topN);
+                GatherUtil.topN(res, orderBySizeAssembleNode.get(0).getTermInOneDoc().getDocId(),
+                        orderBySizeAssembleNode.get(0).getTermInOneDoc().getRank(), topN);
                 continue;
             }
 
-            for (int firstPos : orderBySizeAssembleNode.get(0).getTermInfo().getPosList()) {
+            for (int firstPos : orderBySizeAssembleNode.get(0).getTermInOneDoc().getPositionsList()) {
 
                 boolean flag = true;
                 int next = firstPos;
                 for (int j = 1; j < orderBySizeAssembleNode.size(); j++) {
 
                     next = next + orderBySizeAssembleNode.get(j).getOffset();
-                    int index = Collections.binarySearch(orderBySizeAssembleNode.get(j).getTermInfo().getPosList(), next);
+                    int index = Collections.binarySearch(orderBySizeAssembleNode.get(j).getTermInOneDoc().getPositionsList(), next);
                     if (index < 0) {
                         flag = false;
                         break;
@@ -106,7 +106,7 @@ public class TightnessSearch {
                 if (flag) {
                     double rank = 0;
                     for (AssembleNode assembleNode : assembleNodeListOrigin) {
-                        rank = 10 * rank + assembleNode.getTermInfo().getRank();
+                        rank = 10 * rank + assembleNode.getTermInOneDoc().getRank();
                     }
                     GatherUtil.topN(res, termIntersection.getDocId(), rank, topN);
                     break;
@@ -185,12 +185,12 @@ public class TightnessSearch {
         private int offset;
         private int order;
         private int termCode;
-        private TermInfo termInfo;
+        private InvertPro.TermInOneDoc termInOneDoc;
 
-        public AssembleNode(int termCode, int order, TermInfo termInfo) {
+        public AssembleNode(int termCode, int order, InvertPro.TermInOneDoc termInOneDoc) {
             this.termCode = termCode;
             this.order = order;
-            this.termInfo = termInfo;
+            this.termInOneDoc = termInOneDoc;
         }
 
         public int getOrder() {
@@ -209,12 +209,12 @@ public class TightnessSearch {
             this.termCode = termCode;
         }
 
-        public TermInfo getTermInfo() {
-            return termInfo;
+        public InvertPro.TermInOneDoc getTermInOneDoc() {
+            return termInOneDoc;
         }
 
-        public void setTermInfo(TermInfo termInfo) {
-            this.termInfo = termInfo;
+        public void setTermInOneDoc(InvertPro.TermInOneDoc termInOneDoc) {
+            this.termInOneDoc = termInOneDoc;
         }
 
         public int getOffset() {
@@ -226,7 +226,7 @@ public class TightnessSearch {
         }
 
         public int compareTo(Integer o) {
-            return Ints.compare(termInfo.getPosList().size(), o);
+            return Ints.compare(termInOneDoc.getPositionsList().size(), o);
         }
 
         @Override
@@ -235,7 +235,7 @@ public class TightnessSearch {
                     "offset=" + offset +
                     ", order=" + order +
                     ", termCode=" + termCode +
-                    ", termInfo=" + termInfo +
+                    ", termInOneDoc=" + termInOneDoc +
                     '}';
         }
     }
