@@ -3,7 +3,6 @@
 
 package com.search.engine.protobuf;
 
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import com.search.engine.pojo.FieldAndDocId;
 
@@ -172,8 +171,6 @@ public final class InvertPro {
         public static final int TF_FIELD_NUMBER = 3;
         public static final int RANK_FIELD_NUMBER = 4;
         public static final int POSITIONS_FIELD_NUMBER = 5;
-
-
         @java.lang.Deprecated
         public static final com.google.protobuf.Parser<TermInOneDoc>
                 PARSER = new com.google.protobuf.AbstractParser<TermInOneDoc>() {
@@ -214,12 +211,12 @@ public final class InvertPro {
             super(builder);
         }
 
-        public TermInOneDoc() {
+        private TermInOneDoc() {
             docId_ = 0;
             field_ = 0;
             tf_ = 0;
             rank_ = 0D;
-            positions_ = Lists.newArrayList();
+            positions_ = java.util.Collections.emptyList();
         }
 
         private TermInOneDoc(
@@ -295,7 +292,7 @@ public final class InvertPro {
                                 e.getMessage()).setUnfinishedMessage(this));
             } finally {
                 if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-                    positions_ = Lists.newArrayList(positions_);
+                    positions_ = java.util.Collections.unmodifiableList(positions_);
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -678,7 +675,7 @@ public final class InvertPro {
                 }
                 result.rank_ = rank_;
                 if (((bitField0_ & 0x00000010) == 0x00000010)) {
-                    positions_ = Lists.newArrayList(positions_);
+                    positions_ = java.util.Collections.unmodifiableList(positions_);
                     bitField0_ = (bitField0_ & ~0x00000010);
                 }
                 result.positions_ = positions_;
@@ -901,7 +898,7 @@ public final class InvertPro {
              */
             public java.util.List<java.lang.Integer>
             getPositionsList() {
-                return Lists.newArrayList(positions_);
+                return java.util.Collections.unmodifiableList(positions_);
             }
 
             /**
@@ -1009,7 +1006,7 @@ public final class InvertPro {
             super(builder);
         }
 
-        public TermInfo() {
+        private TermInfo() {
             termInDocList_ = java.util.Collections.emptyList();
         }
 
@@ -1053,7 +1050,7 @@ public final class InvertPro {
                                 e.getMessage()).setUnfinishedMessage(this));
             } finally {
                 if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                    termInDocList_ = Lists.newArrayList(termInDocList_);
+                    termInDocList_ = java.util.Collections.unmodifiableList(termInDocList_);
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -1330,7 +1327,7 @@ public final class InvertPro {
                 int from_bitField0_ = bitField0_;
                 if (termInDocListBuilder_ == null) {
                     if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                        termInDocList_ = Lists.newArrayList(termInDocList_);
+                        termInDocList_ = java.util.Collections.unmodifiableList(termInDocList_);
                         bitField0_ = (bitField0_ & ~0x00000001);
                     }
                     result.termInDocList_ = termInDocList_;
@@ -1422,7 +1419,7 @@ public final class InvertPro {
              */
             public java.util.List<com.search.engine.protobuf.InvertPro.TermInOneDoc> getTermInDocListList() {
                 if (termInDocListBuilder_ == null) {
-                    return Lists.newArrayList(termInDocList_);
+                    return java.util.Collections.unmodifiableList(termInDocList_);
                 } else {
                     return termInDocListBuilder_.getMessageList();
                 }
@@ -1620,7 +1617,7 @@ public final class InvertPro {
                 if (termInDocListBuilder_ != null) {
                     return termInDocListBuilder_.getMessageOrBuilderList();
                 } else {
-                    return Lists.newArrayList(termInDocList_);
+                    return java.util.Collections.unmodifiableList(termInDocList_);
                 }
             }
 
