@@ -220,6 +220,12 @@
                 <version>3.0.0-beta-1</version>
             </dependency>
 
+            <dependency>
+                <groupId>hessian</groupId>
+                <artifactId>hessian</artifactId>
+                <version>3.0.1</version>
+            </dependency>
+
 
         </dependencies>
     </dependencyManagement>
@@ -351,6 +357,12 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>hessian</groupId>
+            <artifactId>hessian</artifactId>
         </dependency>
 
     </dependencies>

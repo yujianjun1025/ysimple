@@ -170,6 +170,8 @@ public class InvertCache {
         try {
 
             Position position = termCodeAndPosition.get(termCode);
+            logger.info("开始位置:{}K, 大小:{}K", (1.0 * position.getOffset()) / 1024, (1.0 * position.getSize()) / 1024);
+
             long begin = System.nanoTime();
             MappedByteBuffer byteBuffer = fc.map(FileChannel.MapMode.READ_ONLY, position.offset, position.size);
             long end = System.nanoTime();
@@ -183,9 +185,9 @@ public class InvertCache {
             logger.info("byteBuffer.get()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
 
             begin = end;
-            List<InvertPro.TermInOneDoc> res = SerializeUtil.deserialize(bytes);
+            List<InvertPro.TermInOneDoc> res = SerializeUtil.deserializeByProto(bytes);
             end = System.nanoTime();
-            logger.info("deserialize()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+            logger.info("deserializeByKryo()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
             return res;
 
         } catch (Exception e) {
@@ -193,8 +195,6 @@ public class InvertCache {
         }
 
         return Lists.newArrayList();
-
-
     }
 
     public void mem2disk() {
@@ -203,7 +203,7 @@ public class InvertCache {
             FileOutputStream fos = new FileOutputStream(TERM_FILE);
             for (int i = 0; i < invertCache.size(); i++) {
 
-                byte[] bytes = SerializeUtil.serialize(invertCache.get(i));
+                byte[] bytes = SerializeUtil.serializeByProto(invertCache.get(i));
                 int size = bytes.length;
                 fos.write(bytes);
                 Position position = new Position(offset, size);
@@ -257,6 +257,14 @@ public class InvertCache {
 
         public void setSize(int size) {
             this.size = size;
+        }
+
+        @Override
+        public String toString() {
+            return "Position{" +
+                    "offset=" + offset +
+                    ", size=" + size +
+                    '}';
         }
     }
 
