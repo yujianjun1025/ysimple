@@ -1,7 +1,9 @@
 package com.search.engine.cache;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.search.engine.pojo.DocInfo;
 import com.search.engine.pojo.FieldAndDocId;
 import com.search.engine.pojo.FieldInfo;
@@ -19,6 +21,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by yjj on 15/12/11.
@@ -31,7 +36,7 @@ public class InvertCache {
 
     private static String TERM_FILE = RefreshTask.class.getResource("/").getPath().concat("termInfo.dat");
     Map<Integer, Position> termCodeAndPosition = Maps.newHashMap();
-    int offset = 0;
+    int OFFSET = 0;
     FileChannel fc = null;
     private int WORD_COUNT = 0;
     private int DOC_COUNT = 0;
@@ -170,24 +175,25 @@ public class InvertCache {
         try {
 
             Position position = termCodeAndPosition.get(termCode);
-            logger.info("开始位置:{}K, 大小:{}K", (1.0 * position.getOffset()) / 1024, (1.0 * position.getSize()) / 1024);
+            logger.info("开始位置:{}K, 大小:{}K", (1.0 * position.getOffset()) / 1024, (1.0 * position.getTotalSize()) / 1024);
 
             long begin = System.nanoTime();
-            MappedByteBuffer byteBuffer = fc.map(FileChannel.MapMode.READ_ONLY, position.offset, position.size);
+            MappedByteBuffer byteBuffer = fc.map(FileChannel.MapMode.READ_ONLY, position.offset, position.getTotalSize());
             long end = System.nanoTime();
 
             logger.info("fc.map()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
 
             begin = end;
-            byte[] bytes = new byte[position.size];
-            byteBuffer.get(bytes, 0, position.size);
+            byte[] bytes = new byte[position.getTotalSize()];
+            byteBuffer.get(bytes, 0, position.getTotalSize());
             end = System.nanoTime();
             logger.info("byteBuffer.get()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
 
             begin = end;
-            List<InvertPro.TermInOneDoc> res = SerializeUtil.deserializeByProto(bytes);
+
+            List<InvertPro.TermInOneDoc> res = parallelDeserialize(position, bytes);
             end = System.nanoTime();
-            logger.info("deserializeByKryo()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+            logger.info("deserializeByProto()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
             return res;
 
         } catch (Exception e) {
@@ -197,18 +203,65 @@ public class InvertCache {
         return Lists.newArrayList();
     }
 
+    private static final ExecutorService DESERIALIZE_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+
+    private List<InvertPro.TermInOneDoc> parallelDeserialize(Position position, byte[] bytes) throws InvalidProtocolBufferException, InterruptedException {
+
+        final List<InvertPro.TermInOneDoc> res = Lists.newArrayList();
+        final Object object = new Object();
+        final Map<Integer, List<InvertPro.TermInOneDoc>> map = Maps.newTreeMap();
+        int lastByteSize = 0;
+        final CountDownLatch countDownLatch = new CountDownLatch(position.getSize().size());
+        for (Integer byteSize : position.getSize()) {
+            int byteLength = byteSize - lastByteSize;
+            final byte[] tmpBytes = new byte[byteLength];
+            final int key = lastByteSize;
+            System.arraycopy(bytes, lastByteSize, tmpBytes, 0, byteLength);
+            DESERIALIZE_THREAD_POOL.submit(new Runnable() {
+                public void run() {
+
+                    try {
+                        List<InvertPro.TermInOneDoc> tmpList = SerializeUtil.deserializeByProto(tmpBytes);
+                        synchronized (object) {
+                            map.put(key, tmpList);
+                        }
+                    } catch (Exception e) {
+                        logger.error("反序列化出现异常", e);
+                    } finally {
+                        countDownLatch.countDown();
+                    }
+                }
+            });
+
+            lastByteSize = byteSize;
+            //todo
+        }
+
+        countDownLatch.await();
+        for (Map.Entry<Integer, List<InvertPro.TermInOneDoc>> entry : map.entrySet()) {
+            res.addAll(entry.getValue());
+        }
+
+        return res;
+    }
+
     public void mem2disk() {
 
         try {
             FileOutputStream fos = new FileOutputStream(TERM_FILE);
             for (int i = 0; i < invertCache.size(); i++) {
 
-                byte[] bytes = SerializeUtil.serializeByProto(invertCache.get(i));
-                int size = bytes.length;
-                fos.write(bytes);
-                Position position = new Position(offset, size);
+                int size = 0;
+                Position position = new Position(OFFSET);
                 termCodeAndPosition.put(i, position);
-                offset += size;
+                //2000只是意淫的一个值
+                for (List<InvertPro.TermInOneDoc> termInOneDocList : Lists.partition(invertCache.get(i), 2000)) {
+                    byte[] bytes = SerializeUtil.serializeByProto(termInOneDocList);
+                    size += bytes.length;
+                    OFFSET += bytes.length;
+                    position.addSize(size);
+                    fos.write(bytes);
+                }
             }
 
             if (fos != null) {
@@ -235,35 +288,35 @@ public class InvertCache {
     }
 
     class Position {
-        private int offset;
-        private int size;
 
-        public Position(int offset, int size) {
+        private int offset;
+        private List<Integer> segmentLength = Lists.newArrayList();
+
+        public Position(int offset) {
             this.offset = offset;
-            this.size = size;
         }
 
         public int getOffset() {
             return offset;
         }
 
-        public void setOffset(int offset) {
-            this.offset = offset;
+        public List<Integer> getSize() {
+            return segmentLength;
         }
 
-        public int getSize() {
-            return size;
+        public void addSize(Integer offset) {
+            segmentLength.add(offset);
         }
 
-        public void setSize(int size) {
-            this.size = size;
+        public Integer getTotalSize() {
+            return segmentLength.get(segmentLength.size() - 1);
         }
 
         @Override
         public String toString() {
             return "Position{" +
-                    "offset=" + offset +
-                    ", size=" + size +
+                    "OFFSET=" + offset +
+                    ", segmentLength=" + Joiner.on(" ").join(segmentLength) +
                     '}';
         }
     }

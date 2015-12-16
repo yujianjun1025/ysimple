@@ -44,17 +44,45 @@ public class TightnessSearch {
         return SearchHolder.instance;
     }
 
-    public List<TermIntersection> getDocIdIntersection(List<Integer> termCodeList, int field) {
+
+    private static final ExecutorService GET_TERM_INFO_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+
+    public List<TermIntersection> getDocIdIntersection(List<Integer> termCodeList, final int field) {
 
         if (CollectionUtils.isEmpty(termCodeList)) {
             return Lists.newArrayList();
         }
 
 
-        List<TermCodeAndTermInfoList> termCodeAndTermInfoLists = Lists.newArrayList();
-
+        final List<TermCodeAndTermInfoList> termCodeAndTermInfoLists = Lists.newArrayList();
+        final CountDownLatch countDownLatch = new CountDownLatch(termCodeList.size());
+        final Object object = new Object();
         for (Integer termCode : termCodeList) {
-            termCodeAndTermInfoLists.add(new TermCodeAndTermInfoList(termCode, invertCache.getTermInfo(termCode, field)));
+
+            final Integer integer = termCode;
+
+            GET_TERM_INFO_THREAD_POOL.submit(new Runnable() {
+                public void run() {
+
+                    try {
+                        synchronized (object) {
+                            termCodeAndTermInfoLists.add(new TermCodeAndTermInfoList(integer, invertCache.getTermInfo(integer, field)));
+                        }
+                    } finally {
+                        countDownLatch.countDown();
+                    }
+                }
+            });
+        }
+
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            logger.error("countDownLatch.await()发生中断异常", e);
+        }
+
+        for (TermCodeAndTermInfoList termCodeAndTermInfoList : termCodeAndTermInfoLists) {
+            logger.info("需要求交的集合termCode:{} termInfoList size:{}", termCodeAndTermInfoList.getTermCode(), termCodeAndTermInfoList.getTermInOneDocList().size());
         }
 
         return GatherUtil.intersectionByBinSearch(termCodeAndTermInfoLists);
