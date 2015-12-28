@@ -34,21 +34,16 @@ public class InvertCache {
 
     private static final Logger logger = LoggerFactory.getLogger(InvertCache.class);
 
-    private static String TERM_FILE = InvertCache.class.getResource("/").getPath().concat("termInfo.dat");
-    Map<Integer, Position> termCodeAndPosition = Maps.newHashMap();
     int OFFSET = 0;
     FileChannel fc = null;
     private int WORD_COUNT = 0;
     private int DOC_COUNT = 0;
-    private List<List<InvertPro.TermInOneDoc>> invertCache = Lists.newArrayList();
     private Map<String, Integer> str2int = Maps.newHashMap();
+    private Map<Integer, Position> termCodeAndPosition = Maps.newHashMap();
+    private List<List<InvertPro.TermInOneDoc>> invertCache = Lists.newArrayList();
 
-    public static InvertCache getInstance() {
-        return InvertCacheHolder.instance;
-    }
 
     public List<InvertPro.TermInOneDoc> getTermInfo(Integer termCode, int field) {
-//        List<TermInOneDoc> res = invertCache.get(termCode);
 
         long begin = System.nanoTime();
         List<InvertPro.TermInOneDoc> res = getTermInfoListByTermCode(termCode);
@@ -245,10 +240,10 @@ public class InvertCache {
         return res;
     }
 
-    public void mem2disk() {
+    public void mem2disk(String fileName) {
 
         try {
-            FileOutputStream fos = new FileOutputStream(TERM_FILE);
+            FileOutputStream fos = new FileOutputStream(fileName);
             for (int i = 0; i < invertCache.size(); i++) {
 
                 int size = 0;
@@ -269,7 +264,7 @@ public class InvertCache {
             }
 
             //磁盘映射到内存
-            fc = new FileInputStream(TERM_FILE).getChannel();
+            fc = new FileInputStream(fileName).getChannel();
 
             //清楚内存中的内容
             invertCache.clear();
@@ -285,6 +280,10 @@ public class InvertCache {
 
     public static final class InvertCacheHolder {
         private static final InvertCache instance = new InvertCache();
+    }
+
+    public static InvertCache getInstance() {
+        return InvertCacheHolder.instance;
     }
 
 

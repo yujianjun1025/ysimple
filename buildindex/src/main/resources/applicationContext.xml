@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns="http://www.springframework.org/schema/beans"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+       xmlns="http://www.springframework.org/schema/beans" xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+
+
+
+       <bean id="rebuildTask" class="com.search.buildindex.timetask.RebuildTask"></bean>
+
+
+       <task:scheduled-tasks>
+              <task:scheduled ref="rebuildTask" method="rebuild" cron="0 0 0 * * ?"/>
+       </task:scheduled-tasks>
 
 
 </beans>
