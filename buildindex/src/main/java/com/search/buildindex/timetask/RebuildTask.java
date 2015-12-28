@@ -10,9 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -31,9 +29,11 @@ public class RebuildTask {
 
     private static final Logger logger = LoggerFactory.getLogger(RebuildTask.class);
     private static final String TXT_FILE = RebuildTask.class.getResource("/").getPath().concat("search_data.txt");
-    private static final String TERM_FILE = InvertCache.class.getResource("/").getPath().concat("termInfo.dat");
+    private static final String TERM_FILE = RebuildTask.class.getResource("/").getPath().concat("termInfo.dat");
+    private static final String STR2INT_FILE = RebuildTask.class.getResource("/").getPath().concat("str2int.txt");
+    private static final String POSITION_FILE = RebuildTask.class.getResource("/").getPath().concat("position.txt");
+    private static final String VERSION_FILE = RebuildTask.class.getResource("/").getPath().concat("version.txt");
     private static volatile long LAST_MODIFY = 0;
-    private static InvertCache invertCache = InvertCache.getInstance();
     private static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     public boolean rebuild() {
@@ -43,29 +43,37 @@ public class RebuildTask {
             return false;
         }
 
+        InvertCache invertCache = new InvertCache();
         try {
             File file = new File(TXT_FILE);
             long tmpLastModify = file.lastModified();
-            if (LAST_MODIFY < tmpLastModify) {
-                buildIndex(TXT_FILE);
-                LAST_MODIFY = tmpLastModify;
+            if (LAST_MODIFY >= tmpLastModify) {
+                return true;
             }
 
+            buildIndex(invertCache, TXT_FILE);
+            LAST_MODIFY = tmpLastModify;
+            BufferedWriter writer = new BufferedWriter(new FileWriter(new File(VERSION_FILE)));
+            writer.write(String.valueOf(LAST_MODIFY));
+            writer.close();
+
+        } catch (Exception e) {
+            logger.error("序列化文件时出现异常", e);
+            return false;
         } finally {
             logger.info("索引任务重建完成");
             readWriteLock.writeLock().unlock();
         }
-
         return true;
     }
 
 
-    public void buildIndex(String fileName) {
+    public void buildIndex(InvertCache invertCache, String fileName) {
 
 
         long begin = System.currentTimeMillis();
         logger.info("开始生成倒排");
-        buildInvert(fileName);
+        buildInvert(invertCache, fileName);
         long end = System.currentTimeMillis();
         logger.info("生成倒排耗时{}毫秒", end - begin);
 
@@ -77,13 +85,18 @@ public class RebuildTask {
 
         begin = end;
         logger.info("开始序列化");
-        invertCache.mem2disk(TERM_FILE);
+        try {
+            InvertCache.mem2disk(invertCache, STR2INT_FILE, POSITION_FILE, TERM_FILE);
+        } catch (Exception e) {
+            logger.error("内存序列化到磁盘出现异常", e);
+        }
         end = System.currentTimeMillis();
         logger.info("序列化完成耗时{}毫秒", end - begin);
+        invertCache = null;
 
     }
 
-    private void buildInvert(String fileName) {
+    private void buildInvert(InvertCache invertCache, String fileName) {
         BufferedReader bufferedReader = null;
         try {
 

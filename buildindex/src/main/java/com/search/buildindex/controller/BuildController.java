@@ -22,7 +22,7 @@ public class BuildController {
     private RebuildTask rebuildTask;
 
 
-    @RequestMapping("test.json")
+    @RequestMapping("build.json")
     @ResponseBody
     public Map<String, Object> test() {
         Map<String, Object> res = new HashMap<String, Object>();

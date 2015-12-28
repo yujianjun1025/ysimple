@@ -8,11 +8,14 @@ import com.search.indexserver.pojo.DocIdAndRank;
 import com.search.indexserver.pojo.TermCodeAndTermInfoList;
 import com.search.indexserver.pojo.TermIntersection;
 import com.search.indexserver.protobuf.InvertPro;
+import com.search.indexserver.timetask.RefreshTask;
 import com.search.indexserver.util.GatherUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
 
+import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -24,30 +27,26 @@ import java.util.concurrent.Executors;
  * 紧密度搜索类
  */
 
+@Repository
 public class TightnessSearch {
 
     private static final Logger logger = LoggerFactory.getLogger(TightnessSearch.class);
 
+    @Resource
+    private RefreshTask refreshTask;
+
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
-    Ordering<AssembleNode> ordering = new Ordering<AssembleNode>() {
+    private static Ordering<AssembleNode> ordering = new Ordering<AssembleNode>() {
         @Override
         public int compare(AssembleNode left, AssembleNode right) {
             return Ints.compare(left.getTermInOneDoc().getPositionsList().size(), right.getTermInOneDoc().getPositionsList().size());
         }
     };
-    private InvertCache invertCache = InvertCache.getInstance();
-
-    private TightnessSearch() {
-    }
-
-    public static TightnessSearch getInstance() {
-        return SearchHolder.instance;
-    }
 
 
     private static final ExecutorService GET_TERM_INFO_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
-    public List<TermIntersection> getDocIdIntersection(List<Integer> termCodeList, final int field) {
+    public List<TermIntersection> getDocIdIntersection(final InvertCache invertCache, List<Integer> termCodeList, final int field) {
 
         if (CollectionUtils.isEmpty(termCodeList)) {
             return Lists.newArrayList();
@@ -150,9 +149,11 @@ public class TightnessSearch {
     public List<DocIdAndRank> doSearch(final String query, final int field, final int topN) {
 
         long begin = System.nanoTime();
+
+        InvertCache invertCache = refreshTask.getInvertCache();
         final List<Integer> termCodeList = invertCache.getTermCodeListByQuery(query);
 
-        List<TermIntersection> termIntersection = getDocIdIntersection(termCodeList, field);
+        List<TermIntersection> termIntersection = getDocIdIntersection(invertCache, termCodeList, field);
         long end = System.nanoTime();
         logger.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
         begin = end;
