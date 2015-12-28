@@ -12,5 +12,5 @@
 hs_err_pid*
 src/main/resources/search_data.txt
 target
-demo.iml
+*.iml
 .idea
