@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="false" scanPeriod="60 seconds" debug="false">
     <!-- 日志文件输出路径 -->
-    <property name="fileDir" value="/tmp/buildIndex/"/>
+    <property name="fileDir" value="/tmp/search/log/buildIndex/"/>
     <!-- 日志内容格式，可根据日志格式进行调整 -->
     <property name="patternLayout" value="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%-5level]&lt;logger:%L %M&gt;%msg%n"/>
     <!-- 输出到控制台 -->

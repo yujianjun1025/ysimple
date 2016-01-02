@@ -205,7 +205,6 @@ public final class InvertPro {
         private double rank_;
         private java.util.List<Integer> positions_;
         private byte memoizedIsInitialized = -1;
-
         // Use TermInOneDoc.newBuilder() to construct.
         private TermInOneDoc(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
             super(builder);
@@ -449,6 +448,10 @@ public final class InvertPro {
          */
         public double getRank() {
             return rank_;
+        }
+
+        public void setRank(double rank) {
+            this.rank_ = rank;
         }
 
         /**
@@ -726,10 +729,7 @@ public final class InvertPro {
                 if (!hasDocId()) {
                     return false;
                 }
-                if (!hasField()) {
-                    return false;
-                }
-                return true;
+                return hasField();
             }
 
             public Builder mergeFrom(

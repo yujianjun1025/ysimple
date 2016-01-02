@@ -23,18 +23,18 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Service
 public class RebuildTask {
 
+    private static final Logger logger = LoggerFactory.getLogger(RebuildTask.class);
+    private static final String TXT_FILE = "/tmp/search/data/search_data.txt";
+    private static final String TERM_FILE = "/tmp/search/invert/termInfo.dat";
+    private static final String STR2INT_FILE = "/tmp/search/invert/str2int.txt";
+    private static final String POSITION_FILE = "/tmp/search/invert/position.txt";
+    private static final String VERSION_FILE = "/tmp/search/invert/version.txt";
+    private static volatile long LAST_MODIFY = 0;
+    private static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+
     public RebuildTask() {
 
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(RebuildTask.class);
-    private static final String TXT_FILE = RebuildTask.class.getResource("/").getPath().concat("search_data.txt");
-    private static final String TERM_FILE = RebuildTask.class.getResource("/").getPath().concat("termInfo.dat");
-    private static final String STR2INT_FILE = RebuildTask.class.getResource("/").getPath().concat("str2int.txt");
-    private static final String POSITION_FILE = RebuildTask.class.getResource("/").getPath().concat("position.txt");
-    private static final String VERSION_FILE = RebuildTask.class.getResource("/").getPath().concat("version.txt");
-    private static volatile long LAST_MODIFY = 0;
-    private static ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     public boolean rebuild() {
 

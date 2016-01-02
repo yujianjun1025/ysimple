@@ -34,6 +34,7 @@ public class InvertCache {
 
 
     private static final Logger logger = LoggerFactory.getLogger(InvertCache.class);
+    private static final ExecutorService DESERIALIZE_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     private int OFFSET = 0;
     private FileChannel fc = null;
     private int WORD_COUNT = 0;
@@ -42,6 +43,69 @@ public class InvertCache {
     private Map<Integer, Position> termCodeAndPosition = Maps.newHashMap();
     private List<List<InvertPro.TermInOneDoc>> cache = Lists.newArrayList();
 
+    public static void mem2disk(InvertCache invertCache, String str2IntFileName, String positionFileName, String termFileName) throws Exception {
+
+        BufferedWriter str2IntWrite = new BufferedWriter(new FileWriter(new File(str2IntFileName)));
+        BufferedWriter positionWrite = new BufferedWriter(new FileWriter(new File(positionFileName)));
+        FileOutputStream fos = new FileOutputStream(termFileName);
+
+        try {
+
+            String str2IntJson = JSON.toJSONString(invertCache.str2int);
+            str2IntWrite.write(str2IntJson);
+
+            for (int i = 0; i < invertCache.cache.size(); i++) {
+
+                int size = 0;
+                Position position = new Position(invertCache.OFFSET);
+                invertCache.termCodeAndPosition.put(i, position);
+                //2000只是意淫的一个值
+                for (List<InvertPro.TermInOneDoc> termInOneDocList : Lists.partition(invertCache.cache.get(i), 2000)) {
+                    byte[] bytes = SerializeUtil.serializeByProto(termInOneDocList);
+                    size += bytes.length;
+                    invertCache.OFFSET += bytes.length;
+                    position.addSize(size);
+                    fos.write(bytes);
+                }
+            }
+
+            String positionJson = JSON.toJSONString(invertCache.termCodeAndPosition);
+            positionWrite.write(positionJson);
+
+
+        } finally {
+            str2IntWrite.close();
+            positionWrite.close();
+            fos.close();
+        }
+    }
+
+    public static InvertCache disk2mem(String str2IntFileName, String positionFileName, String termFileName) throws Exception {
+
+        InvertCache ret = new InvertCache();
+        BufferedReader str2IntReader = new BufferedReader(new FileReader(new File(str2IntFileName)));
+        BufferedReader positionReader = new BufferedReader(new FileReader(new File(positionFileName)));
+
+        try {
+
+            String oneLine = str2IntReader.readLine();
+            ret.str2int = JSON.parseObject(oneLine, new TypeReference<Map<String, Integer>>() {
+            });
+
+            oneLine = positionReader.readLine();
+            ret.termCodeAndPosition = JSON.parseObject(oneLine, new TypeReference<Map<Integer, Position>>() {
+            });
+
+            //磁盘映射到内存
+            ret.fc = new FileInputStream(termFileName).getChannel();
+
+        } finally {
+            str2IntReader.close();
+            positionReader.close();
+        }
+
+        return ret;
+    }
 
     public List<InvertPro.TermInOneDoc> getTermInfo(Integer termCode, int field) {
 
@@ -153,7 +217,7 @@ public class InvertCache {
             double idf = Math.log(DOC_COUNT / entry.size());
             for (InvertPro.TermInOneDoc termInOneDoc : entry) {
                 double rank = idf * termInOneDoc.getTf();
-                termInOneDoc.toBuilder().setRank(rank);
+                termInOneDoc.setRank(rank);
             }
         }
         logger.info("完成rank值计算，耗时{}毫秒", System.currentTimeMillis() - begin);
@@ -194,8 +258,6 @@ public class InvertCache {
         return Lists.newArrayList();
     }
 
-    private static final ExecutorService DESERIALIZE_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
-
     private List<InvertPro.TermInOneDoc> parallelDeserialize(Position position, byte[] bytes) throws InvalidProtocolBufferException, InterruptedException {
 
         final List<InvertPro.TermInOneDoc> res = Lists.newArrayList();
@@ -234,70 +296,6 @@ public class InvertCache {
         }
 
         return res;
-    }
-
-    public static void mem2disk(InvertCache invertCache, String str2IntFileName, String positionFileName, String termFileName) throws Exception {
-
-        BufferedWriter str2IntWrite = new BufferedWriter(new FileWriter(new File(str2IntFileName)));
-        BufferedWriter positionWrite = new BufferedWriter(new FileWriter(new File(positionFileName)));
-        FileOutputStream fos = new FileOutputStream(termFileName);
-
-        try {
-
-            String str2IntJson = JSON.toJSONString(invertCache.str2int);
-            str2IntWrite.write(str2IntJson);
-
-            for (int i = 0; i < invertCache.cache.size(); i++) {
-
-                int size = 0;
-                Position position = new Position(invertCache.OFFSET);
-                invertCache.termCodeAndPosition.put(i, position);
-                //2000只是意淫的一个值
-                for (List<InvertPro.TermInOneDoc> termInOneDocList : Lists.partition(invertCache.cache.get(i), 2000)) {
-                    byte[] bytes = SerializeUtil.serializeByProto(termInOneDocList);
-                    size += bytes.length;
-                    invertCache.OFFSET += bytes.length;
-                    position.addSize(size);
-                    fos.write(bytes);
-                }
-            }
-
-            String positionJson = JSON.toJSONString(invertCache.termCodeAndPosition);
-            positionWrite.write(positionJson);
-
-
-        } finally {
-            str2IntWrite.close();
-            positionWrite.close();
-            fos.close();
-        }
-    }
-
-    public static InvertCache disk2mem(String str2IntFileName, String positionFileName, String termFileName) throws Exception {
-
-        InvertCache ret = new InvertCache();
-        BufferedReader str2IntReader = new BufferedReader(new FileReader(new File(str2IntFileName)));
-        BufferedReader positionReader = new BufferedReader(new FileReader(new File(positionFileName)));
-
-        try {
-
-            String oneLine = str2IntReader.readLine();
-            ret.str2int = JSON.parseObject(oneLine, new TypeReference<Map<String, Integer>>() {
-            });
-
-            oneLine = positionReader.readLine();
-            ret.termCodeAndPosition = JSON.parseObject(oneLine, new TypeReference<Map<Integer, Position>>() {
-            });
-
-            //磁盘映射到内存
-            ret.fc = new FileInputStream(termFileName).getChannel();
-
-        } finally {
-            str2IntReader.close();
-            positionReader.close();
-        }
-
-        return ret;
     }
 
 }
