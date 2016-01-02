@@ -13,12 +13,28 @@ public class Position {
     private int offset;
     private List<Integer> segmentLength = Lists.newArrayList();
 
+    public Position(){
+
+    }
+
     public Position(int offset) {
         this.offset = offset;
     }
 
+    public List<Integer> getSegmentLength() {
+        return segmentLength;
+    }
+
+    public void setSegmentLength(List<Integer> segmentLength) {
+        this.segmentLength = segmentLength;
+    }
+
     public int getOffset() {
         return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
     public List<Integer> getSize() {
