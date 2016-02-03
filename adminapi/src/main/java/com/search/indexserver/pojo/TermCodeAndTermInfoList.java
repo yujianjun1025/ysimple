@@ -1,7 +1,6 @@
 package com.search.indexserver.pojo;
 
 import com.google.common.base.Joiner;
-import com.search.indexserver.protobuf.InvertPro;
 
 import java.util.List;
 
@@ -12,9 +11,9 @@ import java.util.List;
 public class TermCodeAndTermInfoList {
 
     private Integer termCode;
-    private List<InvertPro.TermInOneDoc> termInOneDocList;
+    private List<TermInOneDoc> termInOneDocList;
 
-    public TermCodeAndTermInfoList(Integer termCode, List<InvertPro.TermInOneDoc> termInOneDocList) {
+    public TermCodeAndTermInfoList(Integer termCode, List<TermInOneDoc> termInOneDocList) {
         this.termCode = termCode;
         this.termInOneDocList = termInOneDocList;
     }
@@ -27,11 +26,11 @@ public class TermCodeAndTermInfoList {
         this.termCode = termCode;
     }
 
-    public List<InvertPro.TermInOneDoc> getTermInOneDocList() {
+    public List<TermInOneDoc> getTermInOneDocList() {
         return termInOneDocList;
     }
 
-    public void setTermInOneDocList(List<InvertPro.TermInOneDoc> termInOneDocList) {
+    public void setTermInOneDocList(List<TermInOneDoc> termInOneDocList) {
         this.termInOneDocList = termInOneDocList;
     }
 

@@ -11,6 +11,7 @@ import java.util.List;
 public class Position {
 
     private int offset;
+    private int docCount;
     private List<Integer> segmentLength = Lists.newArrayList();
 
     public Position(){
@@ -19,6 +20,14 @@ public class Position {
 
     public Position(int offset) {
         this.offset = offset;
+    }
+
+    public int getDocCount() {
+        return docCount;
+    }
+
+    public void setDocCount(int docCount) {
+        this.docCount = docCount;
     }
 
     public List<Integer> getSegmentLength() {
@@ -37,10 +46,6 @@ public class Position {
         this.offset = offset;
     }
 
-    public List<Integer> getSize() {
-        return segmentLength;
-    }
-
     public void addSize(Integer offset) {
         segmentLength.add(offset);
     }
@@ -49,10 +54,12 @@ public class Position {
         return segmentLength.get(segmentLength.size() - 1);
     }
 
+
     @Override
     public String toString() {
         return "Position{" +
-                "OFFSET=" + offset +
+                "offset=" + offset +
+                ", docCount=" + docCount +
                 ", segmentLength=" + Joiner.on(" ").join(segmentLength) +
                 '}';
     }

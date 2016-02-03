@@ -36,7 +36,7 @@
     2. 启动buildindex, cd ./buildindex && ./run.sh
     3. 快速生成倒排数据到磁盘, 浏览器访问"http://127.0.0.1:9090/build.json"
     4. 启动indexserver cd ./indexserver && ./run.sh,
-    5. 浏览器访问"http://127.0.0.1:8080/query.json?query=北京 &limit=5" ( limit 为空时，默认返回top3000条数据)
+    5. 浏览器访问"http://127.0.0.1:8080/query.json?query=北京&limit=5" ( limit 为空时，默认返回top3000条数据)
     返回数据格式:
     {
         ret: true,

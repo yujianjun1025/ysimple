@@ -5,11 +5,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.search.indexserver.pojo.DocInfo;
-import com.search.indexserver.pojo.FieldAndDocId;
-import com.search.indexserver.pojo.FieldInfo;
-import com.search.indexserver.pojo.Position;
-import com.search.indexserver.protobuf.InvertPro;
+import com.search.indexserver.pojo.*;
 import com.search.indexserver.util.SegUtil;
 import com.search.indexserver.util.SerializeUtil;
 import org.slf4j.Logger;
@@ -41,7 +37,7 @@ public class InvertCache {
     private int DOC_COUNT = 0;
     private Map<String, Integer> str2int = Maps.newHashMap();
     private Map<Integer, Position> termCodeAndPosition = Maps.newHashMap();
-    private List<List<InvertPro.TermInOneDoc>> cache = Lists.newArrayList();
+    private List<List<TermInOneDoc>> cache = Lists.newArrayList();
 
     public static void mem2disk(InvertCache invertCache, String str2IntFileName, String positionFileName, String termFileName) throws Exception {
 
@@ -59,14 +55,19 @@ public class InvertCache {
                 int size = 0;
                 Position position = new Position(invertCache.OFFSET);
                 invertCache.termCodeAndPosition.put(i, position);
+
+                int docCount = 0;
                 //2000只是意淫的一个值
-                for (List<InvertPro.TermInOneDoc> termInOneDocList : Lists.partition(invertCache.cache.get(i), 2000)) {
-                    byte[] bytes = SerializeUtil.serializeByProto(termInOneDocList);
+                for (List<TermInOneDoc> termInOneDocList : Lists.partition(invertCache.cache.get(i), 2000)) {
+                    byte[] bytes = SerializeUtil.serializeBySelf(termInOneDocList);
                     size += bytes.length;
                     invertCache.OFFSET += bytes.length;
                     position.addSize(size);
                     fos.write(bytes);
+                    docCount += termInOneDocList.size();
                 }
+
+                position.setDocCount(docCount);
             }
 
             String positionJson = JSON.toJSONString(invertCache.termCodeAndPosition);
@@ -107,10 +108,10 @@ public class InvertCache {
         return ret;
     }
 
-    public List<InvertPro.TermInOneDoc> getTermInfo(Integer termCode, int field) {
+    public List<TermInOneDoc> getTermInfo(Integer termCode, int field) {
 
         long begin = System.nanoTime();
-        List<InvertPro.TermInOneDoc> res = getTermInfoListByTermCode(termCode);
+        List<TermInOneDoc> res = getTermInfoListByTermCode(termCode);
         long end = System.nanoTime();
         logger.info("getTermInfoListByTermCode(termCode)耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
 
@@ -176,7 +177,7 @@ public class InvertCache {
                 }
                 Integer stringCode = str2int.get(world);
 
-                List<InvertPro.TermInOneDoc> termInOneDocList;
+                List<TermInOneDoc> termInOneDocList;
                 int length = cache.size();
 
                 if (stringCode >= length) {
@@ -194,12 +195,12 @@ public class InvertCache {
                 if (index < 0) {
 
                     int tf = (entry.getValue().size() * 1000) / fieldInfo.getWorldCount();
-                    InvertPro.TermInOneDoc termInOneDoc = InvertPro.TermInOneDoc.newBuilder().
-                            setTf(tf).
-                            setDocId(docId).
-                            setField(fieldId).
-                            addAllPositions(entry.getValue()).
-                            build();
+                    TermInOneDoc termInOneDoc = new TermInOneDoc();
+
+                    termInOneDoc.setTf(tf);
+                    termInOneDoc.setDocId(docId);
+                    termInOneDoc.setField(fieldId);
+                    termInOneDoc.setPositions(Lists.newArrayList(entry.getValue()));
                     termInOneDocList.add(Math.abs(index + 1), termInOneDoc);
                 }
             }
@@ -212,10 +213,10 @@ public class InvertCache {
     public void calculateRank() {
 
         long begin = System.currentTimeMillis();
-        for (List<InvertPro.TermInOneDoc> entry : cache) {
+        for (List<TermInOneDoc> entry : cache) {
 
             double idf = Math.log(DOC_COUNT / entry.size());
-            for (InvertPro.TermInOneDoc termInOneDoc : entry) {
+            for (TermInOneDoc termInOneDoc : entry) {
                 double rank = idf * termInOneDoc.getTf();
                 termInOneDoc.setRank(rank);
             }
@@ -225,12 +226,12 @@ public class InvertCache {
 
     }
 
-    private List<InvertPro.TermInOneDoc> getTermInfoListByTermCode(Integer termCode) {
+    private List<TermInOneDoc> getTermInfoListByTermCode(Integer termCode) {
 
         try {
 
             Position position = termCodeAndPosition.get(termCode);
-            logger.info("开始位置:{}K, 大小:{}K", (1.0 * position.getOffset()) / 1024, (1.0 * position.getTotalSize()) / 1024);
+            logger.info("开始位置:{}, 大小:{} byte ", position.getOffset(), position.getTotalSize());
 
             long begin = System.nanoTime();
             MappedByteBuffer byteBuffer = fc.map(FileChannel.MapMode.READ_ONLY, position.getOffset(), position.getTotalSize());
@@ -246,7 +247,7 @@ public class InvertCache {
 
             begin = end;
 
-            List<InvertPro.TermInOneDoc> res = parallelDeserialize(position, bytes);
+            List<TermInOneDoc> res = parallelDeserialize(position, bytes);
             end = System.nanoTime();
             logger.info("deserializeByProto()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
             return res;
@@ -258,15 +259,20 @@ public class InvertCache {
         return Lists.newArrayList();
     }
 
-    private List<InvertPro.TermInOneDoc> parallelDeserialize(Position position, byte[] bytes) throws InvalidProtocolBufferException, InterruptedException {
+    private List<TermInOneDoc> parallelDeserialize(Position position, byte[] bytes) throws InvalidProtocolBufferException, InterruptedException {
 
-        final List<InvertPro.TermInOneDoc> res = Lists.newArrayList();
+        final List<TermInOneDoc> res = Lists.newArrayList();
         final Object object = new Object();
-        final Map<Integer, List<InvertPro.TermInOneDoc>> map = Maps.newTreeMap();
+        final Map<Integer, List<TermInOneDoc>> map = Maps.newTreeMap();
         int lastByteSize = 0;
-        final CountDownLatch countDownLatch = new CountDownLatch(position.getSize().size());
-        for (Integer byteSize : position.getSize()) {
+        final CountDownLatch countDownLatch = new CountDownLatch(position.getSegmentLength().size());
+        for (Integer byteSize : position.getSegmentLength()) {
             int byteLength = byteSize - lastByteSize;
+            if (byteLength <= 0) {
+                countDownLatch.countDown();
+                continue;
+            }
+
             final byte[] tmpBytes = new byte[byteLength];
             final int key = lastByteSize;
             System.arraycopy(bytes, lastByteSize, tmpBytes, 0, byteLength);
@@ -274,12 +280,14 @@ public class InvertCache {
                 public void run() {
 
                     try {
-                        List<InvertPro.TermInOneDoc> tmpList = SerializeUtil.deserializeByProto(tmpBytes);
+                        List<TermInOneDoc> tmpList = SerializeUtil.deserializeBySelf(tmpBytes);
                         synchronized (object) {
                             map.put(key, tmpList);
                         }
                     } catch (Exception e) {
                         logger.error("反序列化出现异常", e);
+
+                        logger.error("tmpBytes size ", tmpBytes.length);
                     } finally {
                         countDownLatch.countDown();
                     }
@@ -291,7 +299,7 @@ public class InvertCache {
         }
 
         countDownLatch.await();
-        for (Map.Entry<Integer, List<InvertPro.TermInOneDoc>> entry : map.entrySet()) {
+        for (Map.Entry<Integer, List<TermInOneDoc>> entry : map.entrySet()) {
             res.addAll(entry.getValue());
         }
 

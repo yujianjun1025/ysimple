@@ -5,8 +5,8 @@ import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.search.indexserver.pojo.DocIdAndRank;
 import com.search.indexserver.pojo.TermCodeAndTermInfoList;
+import com.search.indexserver.pojo.TermInOneDoc;
 import com.search.indexserver.pojo.TermIntersection;
-import com.search.indexserver.protobuf.InvertPro;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.Collections;
@@ -20,16 +20,16 @@ import java.util.Map;
  */
 public class GatherUtil {
 
-    private static List<TermIntersection> intersectionByBinSearch(int leftCode, List<InvertPro.TermInOneDoc> left, int rightCode, List<InvertPro.TermInOneDoc> right) {
+    private static List<TermIntersection> intersectionByBinSearch(int leftCode, List<TermInOneDoc> left, int rightCode, List<TermInOneDoc> right) {
 
         List<TermIntersection> res = Lists.newArrayList();
         int min = 0;
         int max = right.size();
-        for (InvertPro.TermInOneDoc termInOneDoc : left) {
+        for (TermInOneDoc termInOneDoc : left) {
             int index = Collections.binarySearch(right.subList(min, max), termInOneDoc.getDocId());
             if (index >= 0) {
 
-                Map<Integer, InvertPro.TermInOneDoc> termInfoMap = Maps.newHashMap();
+                Map<Integer, TermInOneDoc> termInfoMap = Maps.newHashMap();
                 termInfoMap.put(leftCode, termInOneDoc);
                 termInfoMap.put(rightCode, right.get(index));
                 res.add(new TermIntersection(termInOneDoc.getDocId(), termInfoMap));
@@ -40,7 +40,7 @@ public class GatherUtil {
         return res;
     }
 
-    private static List<TermIntersection> intersectionOneByOne(int leftCode, List<InvertPro.TermInOneDoc> left, int rightCode, List<InvertPro.TermInOneDoc> right) {
+    private static List<TermIntersection> intersectionOneByOne(int leftCode, List<TermInOneDoc> left, int rightCode, List<TermInOneDoc> right) {
 
         List<TermIntersection> res = Lists.newArrayList();
 
@@ -48,7 +48,7 @@ public class GatherUtil {
         while (Ints.compare(p1, left.size()) == -1 && Ints.compare(p2, right.size()) == -1) {
             int compare = Ints.compare(left.get(p1).getDocId(), right.get(p2).getDocId());
             if (compare == 0) {
-                Map<Integer, InvertPro.TermInOneDoc> termInfoMap = Maps.newHashMap();
+                Map<Integer, TermInOneDoc> termInfoMap = Maps.newHashMap();
                 termInfoMap.put(leftCode, left.get(p1));
                 termInfoMap.put(rightCode, right.get(p2));
                 res.add(new TermIntersection(left.get(p1).getDocId(), termInfoMap));
@@ -83,9 +83,9 @@ public class GatherUtil {
 
         List<TermIntersection> res = Lists.newArrayList();
         Integer termCode = termCodeAndTermInfoList.get(0).getTermCode();
-        for (InvertPro.TermInOneDoc termInOneDoc : termCodeAndTermInfoList.get(0).getTermInOneDocList()) {
+        for (TermInOneDoc termInOneDoc : termCodeAndTermInfoList.get(0).getTermInOneDocList()) {
 
-            Map<Integer, InvertPro.TermInOneDoc> termInfoMap = Maps.newHashMap();
+            Map<Integer, TermInOneDoc> termInfoMap = Maps.newHashMap();
             termInfoMap.put(termCode, termInOneDoc);
             res.add(new TermIntersection(termInOneDoc.getDocId(), termInfoMap));
         }
@@ -94,7 +94,7 @@ public class GatherUtil {
     }
 
 
-    private static List<TermIntersection> intersectionByBinSearch(List<TermIntersection> termIntersectionList, int rightCode, List<InvertPro.TermInOneDoc> right) {
+    private static List<TermIntersection> intersectionByBinSearch(List<TermIntersection> termIntersectionList, int rightCode, List<TermInOneDoc> right) {
 
         List<TermIntersection> res = Lists.newArrayList();
 
@@ -105,7 +105,7 @@ public class GatherUtil {
 
             int index = Collections.binarySearch(right.subList(min, max), termIntersection.getDocId());
             if (index > 0) {
-                Map<Integer, InvertPro.TermInOneDoc> termInfoMap = termIntersection.getTermInfoMap();
+                Map<Integer, TermInOneDoc> termInfoMap = termIntersection.getTermInfoMap();
                 termInfoMap.put(rightCode, right.get(index));
                 res.add(new TermIntersection(termIntersection.getDocId(), termInfoMap));
                 min = index;
@@ -116,7 +116,7 @@ public class GatherUtil {
 
     }
 
-    private static List<TermIntersection> intersectionOneByOne(List<TermIntersection> termIntersectionList, int rightCode, List<InvertPro.TermInOneDoc> right) {
+    private static List<TermIntersection> intersectionOneByOne(List<TermIntersection> termIntersectionList, int rightCode, List<TermInOneDoc> right) {
 
         List<TermIntersection> res = Lists.newArrayList();
 
@@ -124,7 +124,7 @@ public class GatherUtil {
         while (Ints.compare(p1, termIntersectionList.size()) == -1 && Ints.compare(p2, right.size()) == -1) {
             int compare = Ints.compare(termIntersectionList.get(p1).getDocId(), right.get(p2).getDocId());
             if (compare == 0) {
-                Map<Integer, InvertPro.TermInOneDoc> termInfoMap = termIntersectionList.get(p1).getTermInfoMap();
+                Map<Integer, TermInOneDoc> termInfoMap = termIntersectionList.get(p1).getTermInfoMap();
                 termInfoMap.put(rightCode, right.get(p2));
                 res.add(new TermIntersection(right.get(p1).getDocId(), termInfoMap));
                 p1++;
@@ -140,7 +140,7 @@ public class GatherUtil {
 
     }
 
-    private static List<TermIntersection> intersection(List<TermIntersection> termIntersectionList, int rightCode, List<InvertPro.TermInOneDoc> right) {
+    private static List<TermIntersection> intersection(List<TermIntersection> termIntersectionList, int rightCode, List<TermInOneDoc> right) {
 
         int diff = right.size() / termIntersectionList.size();
 

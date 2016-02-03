@@ -247,11 +247,11 @@
     <distributionManagement>
         <repository>
             <id>nexus-3rd</id>
-            <url>http://nexus.sankuai.com:8081/nexus/content/repositories/thirdparty/</url>
+            <url>http://maven.sankuai.com/nexus/content/repositories/thirdparty/</url>
         </repository>
         <snapshotRepository>
             <id>nexus-snapshots-3rd</id>
-            <url>http://nexus.sankuai.com:8081/nexus/content/repositories/3rdPartySnapshot/</url>
+            <url>http://maven.sankuai.com/nexus/content/repositories/3rdPartySnapshot/</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -260,5 +260,20 @@
         <module>buildindex</module>
         <module>indexserver</module>
     </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                    <compilerVersion>1.8</compilerVersion>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

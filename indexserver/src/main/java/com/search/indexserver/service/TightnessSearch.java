@@ -6,8 +6,8 @@ import com.google.common.primitives.Ints;
 import com.search.indexserver.cache.InvertCache;
 import com.search.indexserver.pojo.DocIdAndRank;
 import com.search.indexserver.pojo.TermCodeAndTermInfoList;
+import com.search.indexserver.pojo.TermInOneDoc;
 import com.search.indexserver.pojo.TermIntersection;
-import com.search.indexserver.protobuf.InvertPro;
 import com.search.indexserver.timetask.RefreshTask;
 import com.search.indexserver.util.GatherUtil;
 import org.apache.commons.collections.CollectionUtils;
@@ -31,20 +31,16 @@ import java.util.concurrent.Executors;
 public class TightnessSearch {
 
     private static final Logger logger = LoggerFactory.getLogger(TightnessSearch.class);
-
-    @Resource
-    private RefreshTask refreshTask;
-
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+    private static final ExecutorService GET_TERM_INFO_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     private static Ordering<AssembleNode> ordering = new Ordering<AssembleNode>() {
         @Override
         public int compare(AssembleNode left, AssembleNode right) {
-            return Ints.compare(left.getTermInOneDoc().getPositionsList().size(), right.getTermInOneDoc().getPositionsList().size());
+            return Ints.compare(left.getTermInOneDoc().getPositions().size(), right.getTermInOneDoc().getPositions().size());
         }
     };
-
-
-    private static final ExecutorService GET_TERM_INFO_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+    @Resource
+    private RefreshTask refreshTask;
 
     public List<TermIntersection> getDocIdIntersection(final InvertCache invertCache, List<Integer> termCodeList, final int field) {
 
@@ -115,14 +111,14 @@ public class TightnessSearch {
                 continue;
             }
 
-            for (int firstPos : orderBySizeAssembleNode.get(0).getTermInOneDoc().getPositionsList()) {
+            for (int firstPos : orderBySizeAssembleNode.get(0).getTermInOneDoc().getPositions()) {
 
                 boolean flag = true;
                 int next = firstPos;
                 for (int j = 1; j < orderBySizeAssembleNode.size(); j++) {
 
                     next = next + orderBySizeAssembleNode.get(j).getOffset();
-                    int index = Collections.binarySearch(orderBySizeAssembleNode.get(j).getTermInOneDoc().getPositionsList(), next);
+                    int index = Collections.binarySearch(orderBySizeAssembleNode.get(j).getTermInOneDoc().getPositions(), next);
                     if (index < 0) {
                         flag = false;
                         break;
@@ -214,9 +210,9 @@ public class TightnessSearch {
         private int offset;
         private int order;
         private int termCode;
-        private InvertPro.TermInOneDoc termInOneDoc;
+        private TermInOneDoc termInOneDoc;
 
-        public AssembleNode(int termCode, int order, InvertPro.TermInOneDoc termInOneDoc) {
+        public AssembleNode(int termCode, int order, TermInOneDoc termInOneDoc) {
             this.termCode = termCode;
             this.order = order;
             this.termInOneDoc = termInOneDoc;
@@ -238,11 +234,11 @@ public class TightnessSearch {
             this.termCode = termCode;
         }
 
-        public InvertPro.TermInOneDoc getTermInOneDoc() {
+        public TermInOneDoc getTermInOneDoc() {
             return termInOneDoc;
         }
 
-        public void setTermInOneDoc(InvertPro.TermInOneDoc termInOneDoc) {
+        public void setTermInOneDoc(TermInOneDoc termInOneDoc) {
             this.termInOneDoc = termInOneDoc;
         }
 
@@ -255,7 +251,7 @@ public class TightnessSearch {
         }
 
         public int compareTo(Integer o) {
-            return Ints.compare(termInOneDoc.getPositionsList().size(), o);
+            return Ints.compare(termInOneDoc.getPositions().size(), o);
         }
 
         @Override
