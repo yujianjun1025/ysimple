@@ -59,7 +59,7 @@ public class InvertCache {
 
                 int docCount = 0;
                 //2000只是意淫的一个值
-                for (List<TermInOneDoc> termInOneDocList : Lists.partition(invertCache.cache.get(i), 4000)) {
+                for (List<TermInOneDoc> termInOneDocList : Lists.partition(invertCache.cache.get(i), 2000)) {
                     byte[] bytes = SerializeUtil.serializeBySelf(termInOneDocList);
                     size += bytes.length;
                     invertCache.OFFSET += bytes.length;

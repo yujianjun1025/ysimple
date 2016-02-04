@@ -59,11 +59,11 @@ public class SerializeUtil {
     public static byte[] serializeBySelf(List<TermInOneDoc> termInOneDocList) {
 
         TermInfo termInfo = new TermInfo(termInOneDocList);
-        return GzipUtil.compress(termInfo.toBytes());
+        return termInfo.toBytes();
     }
 
     public static List<TermInOneDoc> deserializeBySelf(byte[] bytes) {
-        return TermInfo.byte2Object(GzipUtil.uncompress(bytes));
+        return TermInfo.byte2Object(bytes);
     }
 
 
