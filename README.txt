@@ -77,7 +77,36 @@
     [2015-12-05 22:46:25.349] [621747766@qtp-669663528-2] [INFO ]<logger:195 doSearch>查询词:山海, 过滤到符合要求的docId耗时:0.884毫秒, 结果数5
     [2015-12-05 22:46:33.002] [621747766@qtp-669663528-2] [INFO ]<logger:153 doSearch>查询词:上海, 求交得到所有docIds耗时:3.481毫秒, 结果数14477
     [2015-12-05 22:46:33.003] [621747766@qtp-669663528-2] [INFO ]<logger:195 doSearch>查询词:上海, 过滤到符合要求的docId耗时:1.331毫秒, 结果数5
-    
+    磁盘索引日志:
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache 开始位置:40042492, 大小:199068 byte  
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache fc.map()耗时0.045787毫秒 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache byteBuffer.get()耗时0.236684毫秒 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache deserializeByProto()耗时3.114516毫秒 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache getTermInfoListByTermCode(termCode)耗时3.585566毫秒 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache 开始位置:94382617, 大小:102998 byte  
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache fc.map()耗时0.028592毫秒 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache byteBuffer.get()耗时0.144498毫秒 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache deserializeByProto()耗时1.851659毫秒 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.cache.InvertCache getTermInfoListByTermCode(termCode)耗时2.133863毫秒 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.service.TightnessSearch 需要求交的集合termCode:175 termInfoList size:62872 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.service.TightnessSearch 需要求交的集合termCode:986 termInfoList size:32117 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.service.TightnessSearch 查询词:北京, 求交得到所有docIds耗时:7.544401毫秒, 结果数16359 
+    INFO 2016-02-04 12:23:13 com.search.indexserver.service.TightnessSearch 查询词:北京, 过滤到符合要求的docId耗时:2.524375毫秒, 结果数3000 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache 开始位置:74892539, 大小:139823 byte  
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache fc.map()耗时0.039005毫秒 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache byteBuffer.get()耗时0.130654毫秒 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache deserializeByProto()耗时2.075117毫秒 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache getTermInfoListByTermCode(termCode)耗时2.56754毫秒 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache 开始位置:6612848, 大小:519516 byte  
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache fc.map()耗时0.072454毫秒 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache byteBuffer.get()耗时0.327635毫秒 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache deserializeByProto()耗时4.659443毫秒 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.cache.InvertCache getTermInfoListByTermCode(termCode)耗时5.227373毫秒 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.service.TightnessSearch 需要求交的集合termCode:516 termInfoList size:42341 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.service.TightnessSearch 需要求交的集合termCode:29 termInfoList size:157593 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.service.TightnessSearch 查询词:上海, 求交得到所有docIds耗时:10.960468毫秒, 结果数14477 
+    INFO 2016-02-04 12:23:19 com.search.indexserver.service.TightnessSearch 查询词:上海, 过滤到符合要求的docId耗时:3.311432毫秒, 结果数3000
+       
 接下来需要做的事:
     1、内存、响应时间是需要持之以恒的,优化永无止境
     2、目前基于ansj分词， 对于自定义词典还没研究

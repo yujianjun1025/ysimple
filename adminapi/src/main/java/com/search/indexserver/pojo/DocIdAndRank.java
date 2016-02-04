@@ -2,6 +2,7 @@ package com.search.indexserver.pojo;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Created by yjj on 15/12/5.
@@ -9,6 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@ToString
 public class DocIdAndRank implements Comparable<Double> {
 
     private int docId;

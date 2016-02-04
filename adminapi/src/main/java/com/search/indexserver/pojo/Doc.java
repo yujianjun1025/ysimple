@@ -2,6 +2,7 @@ package com.search.indexserver.pojo;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Created by yjj on 15/11/22.
@@ -10,6 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@ToString
 public class Doc {
 
     private int docId;

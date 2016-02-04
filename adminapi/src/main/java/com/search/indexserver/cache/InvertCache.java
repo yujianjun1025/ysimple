@@ -248,7 +248,7 @@ public class InvertCache {
 
             List<TermInOneDoc> res = parallelDeserialize(position, bytes);
             end = System.nanoTime();
-            log.info("deserializeByProto()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+            log.info("deserializeBySelf()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
             return res;
 
         } catch (Exception e) {

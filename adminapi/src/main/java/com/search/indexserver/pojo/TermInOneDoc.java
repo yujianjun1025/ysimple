@@ -1,11 +1,13 @@
 package com.search.indexserver.pojo;
 
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import com.search.indexserver.util.NumberBytes;
 import com.sun.tools.javac.util.Pair;
-import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
 
@@ -13,24 +15,56 @@ import java.util.List;
  *
  * Created by yjj on 16/2/3.
  */
-@Getter
 @Setter
+@ToString
 public class TermInOneDoc implements Comparable<Object> {
     private int docId;
     private int field;
     private int tf;
-    private double rank;
+    private double rank = 0.0;
     private List<Integer> positions = Lists.newArrayList();
+    private byte[] bytes = null;
 
+    //lazy加载
     public static Pair<TermInOneDoc, Integer> byte2Object(byte[] bytes, int begin) {
         TermInOneDoc termInOneDoc = new TermInOneDoc();
         int bytesLength = NumberBytes.bytesToInt(bytes, begin);
         termInOneDoc.docId = NumberBytes.bytesToInt(bytes, begin + 4);
-        termInOneDoc.field = NumberBytes.bytesToInt(bytes, begin + 8);
-        termInOneDoc.tf = NumberBytes.bytesToInt(bytes, begin + 12);
-        termInOneDoc.rank = NumberBytes.bytesToDouble(bytes, begin + 16);
-        termInOneDoc.positions = NumberBytes.bytesToInts(bytes, begin + 24);
+        termInOneDoc.bytes = new byte[bytesLength];
+        System.arraycopy(bytes, begin, termInOneDoc.bytes, 0, bytesLength);
         return new Pair<TermInOneDoc, Integer>(termInOneDoc, bytesLength);
+    }
+
+    public int getDocId() {
+        return docId;
+    }
+
+    public int getField() {
+        if (field == 0 && bytes != null) {
+            field = NumberBytes.bytesToInt(bytes, 8);
+        }
+        return field;
+    }
+
+    public int getTf() {
+        if (tf == 0 && bytes != null) {
+            tf = NumberBytes.bytesToInt(bytes, 12);
+        }
+        return tf;
+    }
+
+    public double getRank() {
+        if (Doubles.compare(rank, 0.0) == 0 && bytes != null) {
+            rank = NumberBytes.bytesToDouble(bytes, 16);
+        }
+        return rank;
+    }
+
+    public List<Integer> getPositions() {
+        if (CollectionUtils.isEmpty(positions) && bytes != null) {
+            positions = NumberBytes.bytesToInts(bytes, 24);
+        }
+        return positions;
     }
 
     public int compareTo(Object o) {
@@ -41,17 +75,6 @@ public class TermInOneDoc implements Comparable<Object> {
             return res != 0 ? res : Ints.compare(getDocId(), ((FieldAndDocId) o).getDocId());
         }
         return 0;
-    }
-
-    @Override
-    public String toString() {
-        return "TermInOneDoc{" +
-                "docId=" + docId +
-                ", field=" + field +
-                ", tf=" + tf +
-                ", rank=" + rank +
-                ", positions=" + positions +
-                '}';
     }
 
     public byte[] toBytes() {

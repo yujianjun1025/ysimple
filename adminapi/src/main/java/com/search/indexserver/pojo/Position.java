@@ -13,7 +13,6 @@ import java.util.List;
  */
 @Getter
 @Setter
-
 public class Position {
 
     private int offset;
