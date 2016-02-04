@@ -5,10 +5,10 @@ package com.search.indexserver.util;
  * Created by yjj on 16/2/2.
  */
 
-import com.google.common.base.Preconditions;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * 对数字和字节进行转换。<br>
@@ -219,9 +219,9 @@ public class NumberBytes {
         length |= (b[2] << 8) & 0xFF00;
         length |= b[3] & 0xFF;
 
-        Preconditions.checkArgument(length == (b.length - 4) / 4);
+        checkArgument(length == (b.length - 4) / 4);
 
-        List<Integer> ret = new ArrayList<Integer>(length);
+        List<Integer> ret = new ArrayList<>(length);
         for (int i = 4; i < b.length; i += 4) {
 
             int value = (b[i] << 24) & 0xFF000000;
@@ -242,7 +242,7 @@ public class NumberBytes {
         length |= b[begin + 3] & 0xFF;
 
 
-        List<Integer> ret = new ArrayList<Integer>(length);
+        List<Integer> ret = new ArrayList<>(length);
         for (int i = begin + 4; i <= begin + length * 4; i += 4) {
 
             int value = (b[i] << 24) & 0xFF000000;

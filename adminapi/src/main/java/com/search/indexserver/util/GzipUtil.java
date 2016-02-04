@@ -10,6 +10,7 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 /**
+ *
  * Created by yjj on 16/2/3.
  */
 public class GzipUtil {

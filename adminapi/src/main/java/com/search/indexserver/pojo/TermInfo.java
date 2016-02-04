@@ -10,6 +10,7 @@ import lombok.Setter;
 import java.util.List;
 
 /**
+ *
  * Created by yjj on 16/2/3.
  */
 @Getter
@@ -31,7 +32,7 @@ public class TermInfo {
         }
 
         int begin = 0;
-        Pair<TermInOneDoc, Integer> pair = null;
+        Pair<TermInOneDoc, Integer> pair;
         do {
 
             pair = TermInOneDoc.byte2Object(bytes, begin);

@@ -31,7 +31,6 @@ public class MatchUtil {
             if (src.charAt(i) == dst.charAt(j)) {
                 i++;
                 j++;
-                continue;
             } else if (j == 0) {
                 i++;
             } else {
