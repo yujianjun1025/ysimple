@@ -1,5 +1,6 @@
 package com.search.buildindex.controller;
 
+import com.google.common.collect.Maps;
 import com.search.buildindex.timetask.RebuildTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -7,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -22,7 +22,7 @@ public class BuildController {
     @RequestMapping("build.json")
     @ResponseBody
     public Map<String, Object> test() {
-        Map<String, Object> res = new HashMap<String, Object>();
+        Map<String, Object> res = Maps.newHashMap();
 
         try {
 

@@ -10,6 +10,9 @@ import com.search.indexserver.pojo.TermInOneDoc;
 import com.search.indexserver.pojo.TermIntersection;
 import com.search.indexserver.timetask.RefreshTask;
 import com.search.indexserver.util.GatherUtil;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Repository;
@@ -201,11 +204,10 @@ public class TightnessSearch {
 
     }
 
-    private static final class SearchHolder {
-        private static final TightnessSearch instance = new TightnessSearch();
-    }
-
-    class AssembleNode implements Comparable<Integer> {
+    @Setter
+    @Getter
+    @ToString
+    class AssembleNode implements Comparable<Object> {
         private int offset;
         private int order;
         private int termCode;
@@ -217,50 +219,15 @@ public class TightnessSearch {
             this.termInOneDoc = termInOneDoc;
         }
 
-        public int getOrder() {
-            return order;
-        }
-
-        public void setOrder(int order) {
-            this.order = order;
-        }
-
-        public int getTermCode() {
-            return termCode;
-        }
-
-        public void setTermCode(int termCode) {
-            this.termCode = termCode;
-        }
-
-        public TermInOneDoc getTermInOneDoc() {
-            return termInOneDoc;
-        }
-
-        public void setTermInOneDoc(TermInOneDoc termInOneDoc) {
-            this.termInOneDoc = termInOneDoc;
-        }
-
-        public int getOffset() {
-            return offset;
-        }
-
-        public void setOffset(int offset) {
-            this.offset = offset;
-        }
-
-        public int compareTo(Integer o) {
-            return Ints.compare(termInOneDoc.getPositions().size(), o);
-        }
-
         @Override
-        public String toString() {
-            return "AssembleNode{" +
-                    "offset=" + offset +
-                    ", order=" + order +
-                    ", termCode=" + termCode +
-                    ", termInOneDoc=" + termInOneDoc +
-                    '}';
+        public int compareTo(Object o) {
+            if (o instanceof Integer) {
+                return Ints.compare(termInOneDoc.getPositions().size(), (Integer) o);
+            } else if (o instanceof AssembleNode) {
+                AssembleNode tmp = (AssembleNode) o;
+                return Ints.compare(termInOneDoc.getPositions().size(), tmp.getTermInOneDoc().getPositions().size());
+            }
+            return 0;
         }
     }
 }

@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
+ *
  * Created by yjj on 15/12/28.
  */
 
@@ -40,7 +41,7 @@ public class RefreshTask {
         log.info("开始加载倒排数据");
 
 
-        InvertCache tmpCache = null;
+        InvertCache tmpCache;
         try {
 
             BufferedReader reader = new BufferedReader(new FileReader(new File(VERSION_FILE)));

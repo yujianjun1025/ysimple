@@ -15,7 +15,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * Created by yjj on 15/11/22.
+ * Created by yjj on 15/11/22
  * 定时更新索引任务、虚拟化倒排文件，反虚拟化倒排文件任务
  */
 
@@ -91,7 +91,6 @@ public class RebuildTask {
         }
         end = System.currentTimeMillis();
         log.info("序列化完成耗时{}毫秒", end - begin);
-        invertCache = null;
 
     }
 

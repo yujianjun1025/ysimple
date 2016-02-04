@@ -1,5 +1,6 @@
 package com.search.indexserver.controller;
 
+import com.google.common.collect.Maps;
 import com.search.indexserver.service.TightnessSearch;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -24,7 +24,7 @@ public class SearchController {
     @ResponseBody
     public Map<String, Object> test(@RequestParam(value = "query", required = true) String query,
                                     @RequestParam(value = "limit", required = false) Integer limit) {
-        Map<String, Object> res = new HashMap<String, Object>();
+        Map<String, Object> res = Maps.newHashMap();
 
         try {
 
