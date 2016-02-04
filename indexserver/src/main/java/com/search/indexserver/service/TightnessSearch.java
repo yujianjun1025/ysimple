@@ -6,13 +6,12 @@ import com.google.common.primitives.Ints;
 import com.search.indexserver.cache.InvertCache;
 import com.search.indexserver.pojo.DocIdAndRank;
 import com.search.indexserver.pojo.TermCodeAndTermInfoList;
+import com.search.indexserver.pojo.TermInOneDoc;
 import com.search.indexserver.pojo.TermIntersection;
-import com.search.indexserver.protobuf.InvertPro;
 import com.search.indexserver.timetask.RefreshTask;
 import com.search.indexserver.util.GatherUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -28,23 +27,19 @@ import java.util.concurrent.Executors;
  */
 
 @Repository
+@Slf4j
 public class TightnessSearch {
 
-    private static final Logger logger = LoggerFactory.getLogger(TightnessSearch.class);
-
-    @Resource
-    private RefreshTask refreshTask;
-
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+    private static final ExecutorService GET_TERM_INFO_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     private static Ordering<AssembleNode> ordering = new Ordering<AssembleNode>() {
         @Override
         public int compare(AssembleNode left, AssembleNode right) {
-            return Ints.compare(left.getTermInOneDoc().getPositionsList().size(), right.getTermInOneDoc().getPositionsList().size());
+            return Ints.compare(left.getTermInOneDoc().getPositions().size(), right.getTermInOneDoc().getPositions().size());
         }
     };
-
-
-    private static final ExecutorService GET_TERM_INFO_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+    @Resource
+    private RefreshTask refreshTask;
 
     public List<TermIntersection> getDocIdIntersection(final InvertCache invertCache, List<Integer> termCodeList, final int field) {
 
@@ -77,11 +72,11 @@ public class TightnessSearch {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("countDownLatch.await()发生中断异常", e);
+            log.error("countDownLatch.await()发生中断异常", e);
         }
 
         for (TermCodeAndTermInfoList termCodeAndTermInfoList : termCodeAndTermInfoLists) {
-            logger.info("需要求交的集合termCode:{} termInfoList size:{}", termCodeAndTermInfoList.getTermCode(), termCodeAndTermInfoList.getTermInOneDocList().size());
+            log.info("需要求交的集合termCode:{} termInfoList size:{}", termCodeAndTermInfoList.getTermCode(), termCodeAndTermInfoList.getTermInOneDocList().size());
         }
 
         return GatherUtil.intersectionByBinSearch(termCodeAndTermInfoLists);
@@ -115,14 +110,14 @@ public class TightnessSearch {
                 continue;
             }
 
-            for (int firstPos : orderBySizeAssembleNode.get(0).getTermInOneDoc().getPositionsList()) {
+            for (int firstPos : orderBySizeAssembleNode.get(0).getTermInOneDoc().getPositions()) {
 
                 boolean flag = true;
                 int next = firstPos;
                 for (int j = 1; j < orderBySizeAssembleNode.size(); j++) {
 
                     next = next + orderBySizeAssembleNode.get(j).getOffset();
-                    int index = Collections.binarySearch(orderBySizeAssembleNode.get(j).getTermInOneDoc().getPositionsList(), next);
+                    int index = Collections.binarySearch(orderBySizeAssembleNode.get(j).getTermInOneDoc().getPositions(), next);
                     if (index < 0) {
                         flag = false;
                         break;
@@ -155,11 +150,11 @@ public class TightnessSearch {
 
         List<TermIntersection> termIntersection = getDocIdIntersection(invertCache, termCodeList, field);
         long end = System.nanoTime();
-        logger.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
+        log.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
         begin = end;
 
         if (CollectionUtils.isEmpty(termCodeList)) {
-            logger.info("termCodeList为 0， 不继续查询");
+            log.info("termCodeList为 0， 不继续查询");
             return Lists.newArrayList();
         }
 
@@ -182,7 +177,7 @@ public class TightnessSearch {
                         }
 
                     } catch (Exception e) {
-                        logger.error("assembleDoc时出现异常", e);
+                        log.error("assembleDoc时出现异常", e);
                     } finally {
                         countDownLatch.countDown();
 
@@ -197,11 +192,11 @@ public class TightnessSearch {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("countDownLatch 发生线程中断异常", e);
+            log.error("countDownLatch 发生线程中断异常", e);
         }
 
         end = System.nanoTime();
-        logger.info("查询词:{}, 过滤到符合要求的docId耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, docIdAndRankRes.size());
+        log.info("查询词:{}, 过滤到符合要求的docId耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, docIdAndRankRes.size());
         return Lists.reverse(docIdAndRankRes);
 
     }
@@ -214,9 +209,9 @@ public class TightnessSearch {
         private int offset;
         private int order;
         private int termCode;
-        private InvertPro.TermInOneDoc termInOneDoc;
+        private TermInOneDoc termInOneDoc;
 
-        public AssembleNode(int termCode, int order, InvertPro.TermInOneDoc termInOneDoc) {
+        public AssembleNode(int termCode, int order, TermInOneDoc termInOneDoc) {
             this.termCode = termCode;
             this.order = order;
             this.termInOneDoc = termInOneDoc;
@@ -238,11 +233,11 @@ public class TightnessSearch {
             this.termCode = termCode;
         }
 
-        public InvertPro.TermInOneDoc getTermInOneDoc() {
+        public TermInOneDoc getTermInOneDoc() {
             return termInOneDoc;
         }
 
-        public void setTermInOneDoc(InvertPro.TermInOneDoc termInOneDoc) {
+        public void setTermInOneDoc(TermInOneDoc termInOneDoc) {
             this.termInOneDoc = termInOneDoc;
         }
 
@@ -255,7 +250,7 @@ public class TightnessSearch {
         }
 
         public int compareTo(Integer o) {
-            return Ints.compare(termInOneDoc.getPositionsList().size(), o);
+            return Ints.compare(termInOneDoc.getPositions().size(), o);
         }
 
         @Override

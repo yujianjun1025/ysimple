@@ -1,9 +1,6 @@
 package com.search.indexserver.util;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import org.ansj.domain.Term;
-import org.ansj.splitWord.analysis.ToAnalysis;
 
 import java.util.List;
 
@@ -15,22 +12,21 @@ public class SegUtil {
 
     public static List<String> split(String value) {
 
-        List<Term> terms = ToAnalysis.parse(value);
+       /* List<Term> terms = ToAnalysis.parse(value);
 
         return  Lists.transform(terms, new Function<Term, String>() {
             public String apply(Term input) {
                 return input.getName();
             }
-        });
+        });*/
 
 
-       /*
-       //java原生单字分词
-       List<String> result = Lists.newArrayList();a
+        //java原生单字分词
+        List<String> result = Lists.newArrayList();
 
         for (Character character : value.toCharArray()) {
             result.add(character.toString());
         }
-        return result;*/
+        return result;
     }
 }

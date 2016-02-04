@@ -2,6 +2,9 @@ package com.search.indexserver.pojo;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -9,6 +12,9 @@ import java.util.List;
  * Created by yjj on 15/11/29.
  *
  */
+@Getter
+@Setter
+@ToString
 public class DocInfo {
 
     List<FieldInfo> field = Lists.newArrayList();
@@ -18,25 +24,4 @@ public class DocInfo {
         this.docId = docId;
         this.field = Lists.newArrayList(new FieldInfo(field, worldCount, worldPosition));
     }
-
-    public Integer getDocId() {
-        return docId;
-    }
-
-    public void setDocId(int docId) {
-        this.docId = docId;
-    }
-
-    public void setDocId(Integer docId) {
-        this.docId = docId;
-    }
-
-    public List<FieldInfo> getField() {
-        return field;
-    }
-
-    public void setField(List<FieldInfo> field) {
-        this.field = field;
-    }
-
 }

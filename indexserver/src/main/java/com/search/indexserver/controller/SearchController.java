@@ -1,8 +1,7 @@
 package com.search.indexserver.controller;
 
 import com.search.indexserver.service.TightnessSearch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,14 +13,12 @@ import java.util.Map;
 
 
 @Controller
+@Slf4j
 public class SearchController {
-
-    private static final Logger logger = LoggerFactory.getLogger(SearchController.class);
 
 
     @Resource
     private TightnessSearch tightnessSearch;
-
 
     @RequestMapping("query.json")
     @ResponseBody
