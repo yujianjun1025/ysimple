@@ -1,5 +1,6 @@
 package com.search.buildindex.timetask;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.search.indexserver.cache.InvertCache;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -69,28 +71,24 @@ public class RebuildTask {
 
     public void buildIndex(InvertCache invertCache, String fileName) {
 
-
-        long begin = System.currentTimeMillis();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         log.info("开始生成倒排");
         buildInvert(invertCache, fileName);
-        long end = System.currentTimeMillis();
-        log.info("生成倒排耗时{}毫秒", end - begin);
+        log.info("生成倒排耗时{}毫秒", stopwatch.elapsed(TimeUnit.MILLISECONDS));
 
-        begin = end;
+        stopwatch.reset().start();
         log.info("开始计算rank值");
         invertCache.calculateRank();
-        end = System.currentTimeMillis();
-        log.info("计算rerank值耗时{}毫秒", end - begin);
+        log.info("计算rerank值耗时{}毫秒", stopwatch.elapsed(TimeUnit.MILLISECONDS));
 
-        begin = end;
+        stopwatch.reset().start();
         log.info("开始序列化");
         try {
             InvertCache.mem2disk(invertCache, STR2INT_FILE, POSITION_FILE, TERM_FILE);
         } catch (Exception e) {
             log.error("内存序列化到磁盘出现异常", e);
         }
-        end = System.currentTimeMillis();
-        log.info("序列化完成耗时{}毫秒", end - begin);
+        log.info("序列化完成耗时{}毫秒", stopwatch.elapsed(TimeUnit.MILLISECONDS));
 
     }
 

@@ -158,7 +158,6 @@ public class GatherUtil {
             return Lists.newArrayList();
         }
 
-        // logger.info("需要求交集合排序前结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
         Collections.sort(termCodeAndTermInfoList, new Comparator<TermCodeAndTermInfoList>() {
             public int compare(TermCodeAndTermInfoList o1, TermCodeAndTermInfoList o2) {
                 return Ints.compare(o1.getTermInOneDocList().size(), o2.getTermInOneDocList().size());
@@ -166,7 +165,6 @@ public class GatherUtil {
         });
 
         List<TermIntersection> res;
-        // logger.info("需要求交集合排序后结果:\n{}", Joiner.on("\n").join(termCodeAndTermInfoList));
         if (termCodeAndTermInfoList.size() == 1) {
             res = intersectionOnlyOne(termCodeAndTermInfoList);
             return res;
@@ -174,7 +172,6 @@ public class GatherUtil {
         }
 
         res = intersectionOnlyTwo(termCodeAndTermInfoList);
-        //  logger.info("前2位求交结果:\n{}", Joiner.on(" ").join(res));
         for (int i = 2; i < termCodeAndTermInfoList.size(); i++) {
             res = intersection(res, termCodeAndTermInfoList.get(i).getTermCode(), termCodeAndTermInfoList.get(i).getTermInOneDocList());
         }

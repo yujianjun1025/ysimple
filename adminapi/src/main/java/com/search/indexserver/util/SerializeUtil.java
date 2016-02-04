@@ -1,6 +1,5 @@
 package com.search.indexserver.util;
 
-import com.google.common.collect.Maps;
 import com.search.indexserver.pojo.TermInOneDoc;
 import com.search.indexserver.pojo.TermInfo;
 import org.slf4j.LoggerFactory;
@@ -10,7 +9,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -68,21 +66,5 @@ public class SerializeUtil {
         return TermInfo.byte2Object(GzipUtil.uncompress(bytes));
     }
 
-
-    public static void main(String[] args) {
-        Map<String, Integer> map = Maps.newHashMap();
-        map.put("a", 1);
-        map.put("b", 1);
-        map.put("c", 1);
-        map.put("d", 1);
-
-        byte[] bytes = serializeMapByJava(map);
-
-        Map<String, Integer> map1 = (Map<String, Integer>) deserializeByJava(bytes);
-
-
-        System.out.println(map1.toString());
-
-    }
 
 }

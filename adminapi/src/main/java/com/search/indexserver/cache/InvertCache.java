@@ -2,6 +2,7 @@ package com.search.indexserver.cache;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by yjj on 15/12/11.
@@ -109,10 +111,9 @@ public class InvertCache {
 
     public List<TermInOneDoc> getTermInfo(Integer termCode, int field) {
 
-        long begin = System.nanoTime();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         List<TermInOneDoc> res = getTermInfoListByTermCode(termCode);
-        long end = System.nanoTime();
-        log.info("getTermInfoListByTermCode(termCode)耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+        log.info("getTermInfoListByTermCode(termCode)耗时{}毫秒", (1.0 * stopwatch.elapsed(TimeUnit.NANOSECONDS)) / 1000000);
 
         if (res == null) {
             return Lists.newArrayList();
@@ -232,23 +233,24 @@ public class InvertCache {
             Position position = termCodeAndPosition.get(termCode);
             log.info("开始位置:{}, 大小:{} byte ", position.getOffset(), position.getTotalSize());
 
-            long begin = System.nanoTime();
+
+            Stopwatch stopwatch = Stopwatch.createStarted();
             MappedByteBuffer byteBuffer = fc.map(FileChannel.MapMode.READ_ONLY, position.getOffset(), position.getTotalSize());
             long end = System.nanoTime();
 
-            log.info("fc.map()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+            log.info("fc.map()耗时{}毫秒", (1.0 * stopwatch.elapsed(TimeUnit.NANOSECONDS)) / 1000000);
 
-            begin = end;
+
+            stopwatch.reset().start();
             byte[] bytes = new byte[position.getTotalSize()];
             byteBuffer.get(bytes, 0, position.getTotalSize());
             end = System.nanoTime();
-            log.info("byteBuffer.get()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+            log.info("byteBuffer.get()耗时{}毫秒", (1.0 * stopwatch.elapsed(TimeUnit.NANOSECONDS)) / 1000000);
 
-            begin = end;
-
+            stopwatch.reset().start();
             List<TermInOneDoc> res = parallelDeserialize(position, bytes);
             end = System.nanoTime();
-            log.info("deserializeBySelf()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+            log.info("deserializeBySelf()耗时{}毫秒", (1.0 * stopwatch.elapsed(TimeUnit.NANOSECONDS)) / 1000000);
             return res;
 
         } catch (Exception e) {

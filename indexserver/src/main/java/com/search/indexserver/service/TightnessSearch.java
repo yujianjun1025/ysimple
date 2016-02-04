@@ -1,5 +1,6 @@
 package com.search.indexserver.service;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by yjj on 15/11/29.
@@ -146,21 +148,21 @@ public class TightnessSearch {
 
     public List<DocIdAndRank> doSearch(final String query, final int field, final int topN) {
 
-        long begin = System.nanoTime();
 
+        Stopwatch stopwatch = Stopwatch.createStarted();
         InvertCache invertCache = refreshTask.getInvertCache();
         final List<Integer> termCodeList = invertCache.getTermCodeListByQuery(query);
 
         List<TermIntersection> termIntersection = getDocIdIntersection(invertCache, termCodeList, field);
-        long end = System.nanoTime();
-        log.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
-        begin = end;
+
+        log.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (1.0 * stopwatch.elapsed(TimeUnit.NANOSECONDS)) / 1000000, termIntersection.size());
 
         if (CollectionUtils.isEmpty(termCodeList)) {
             log.info("termCodeList为 0， 不继续查询");
             return Lists.newArrayList();
         }
 
+        stopwatch.reset().start();
         final List<DocIdAndRank> docIdAndRankRes = Lists.newArrayList();
         final Object object = new Object();
         List<List<TermIntersection>> partitions = Lists.partition(termIntersection, 500);
@@ -198,8 +200,7 @@ public class TightnessSearch {
             log.error("countDownLatch 发生线程中断异常", e);
         }
 
-        end = System.nanoTime();
-        log.info("查询词:{}, 过滤到符合要求的docId耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, docIdAndRankRes.size());
+        log.info("查询词:{}, 过滤到符合要求的docId耗时:{}毫秒, 结果数{}", query, (1.0 * stopwatch.elapsed(TimeUnit.NANOSECONDS)) / 1000000, docIdAndRankRes.size());
         return Lists.reverse(docIdAndRankRes);
 
     }
