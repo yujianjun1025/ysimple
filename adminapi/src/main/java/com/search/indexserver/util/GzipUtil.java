@@ -1,9 +1,11 @@
 package com.search.indexserver.util;
 
+import com.google.common.base.Stopwatch;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -42,6 +44,8 @@ public class GzipUtil {
 
 
     public static byte[] uncompress(byte[] input) {
+
+        Stopwatch stopwatch = Stopwatch.createStarted();
         Inflater deCompressor = new Inflater();
         deCompressor.setInput(input);
 
@@ -62,6 +66,8 @@ public class GzipUtil {
             log.error("gzip 解压缩出现异常", e);
         }
 
-        return bos.toByteArray();
+        byte[] ret = bos.toByteArray();
+        log.info("uncompress 解压前 length {} 解压后length {} 耗时 {}毫秒", input.length, ret.length, (1.0 * stopwatch.elapsed(TimeUnit.NANOSECONDS) / 1000000));
+        return ret;
     }
 }

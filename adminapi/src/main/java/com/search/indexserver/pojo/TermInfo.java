@@ -1,13 +1,16 @@
 package com.search.indexserver.pojo;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.search.indexserver.util.NumberBytes;
 import com.sun.tools.javac.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -15,6 +18,7 @@ import java.util.List;
  */
 @Getter
 @Setter
+@Slf4j
 public class TermInfo {
 
     private List<TermInOneDoc> inOneDocList = Lists.newArrayList();
@@ -31,17 +35,15 @@ public class TermInfo {
             return inOneDocs;
         }
 
+        Stopwatch stopwatch = Stopwatch.createStarted();
         int begin = 0;
         Pair<TermInOneDoc, Integer> pair;
         do {
-
             pair = TermInOneDoc.byte2Object(bytes, begin);
             inOneDocs.add(pair.fst);
             begin += pair.snd;
-
         } while (pair.snd < bytes.length && begin < bytes.length);
-
-
+        log.info("TermInOneDoc.byte2Object byte length {} 耗时 {} 毫秒", bytes.length, (1.0 * stopwatch.elapsed(TimeUnit.NANOSECONDS)) / 1000000);
         return inOneDocs;
     }
 
