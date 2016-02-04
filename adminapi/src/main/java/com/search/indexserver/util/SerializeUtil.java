@@ -14,7 +14,6 @@ import java.util.Map;
 
 /**
  *
- *
  * Created by yjj on 15/12/14.
  */
 public class SerializeUtil {
@@ -62,11 +61,11 @@ public class SerializeUtil {
     public static byte[] serializeBySelf(List<TermInOneDoc> termInOneDocList) {
 
         TermInfo termInfo = new TermInfo(termInOneDocList);
-        return termInfo.toBytes();
+        return GzipUtil.compress(termInfo.toBytes());
     }
 
     public static List<TermInOneDoc> deserializeBySelf(byte[] bytes) {
-        return TermInfo.byte2Object(bytes);
+        return TermInfo.byte2Object(GzipUtil.uncompress(bytes));
     }
 
 
@@ -83,8 +82,6 @@ public class SerializeUtil {
 
 
         System.out.println(map1.toString());
-
-
 
     }
 

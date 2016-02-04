@@ -4,20 +4,19 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.search.indexserver.util.NumberBytes;
 import com.sun.tools.javac.util.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 /**
  * Created by yjj on 16/2/3.
  */
+@Getter
+@Setter
 public class TermInfo {
 
-    private static final Logger logger = LoggerFactory.getLogger(TermInfo.class);
-
-
-    List<TermInOneDoc> inOneDocList = Lists.newArrayList();
+    private List<TermInOneDoc> inOneDocList = Lists.newArrayList();
 
     public TermInfo(List<TermInOneDoc> inOneDocList) {
         this.inOneDocList = inOneDocList;
@@ -45,47 +44,6 @@ public class TermInfo {
         return inOneDocs;
     }
 
-    public static void main(String[] args) {
-
-        TermInOneDoc inOneDoc = new TermInOneDoc();
-
-        inOneDoc.setDocId(12);
-        inOneDoc.setField(2);
-        inOneDoc.setTf(34);
-        inOneDoc.setRank(3.14);
-        inOneDoc.setPositions(Lists.newArrayList(3, 5, 7, 13, 14, 6, 7, 9, 0));
-
-
-        Pair<TermInOneDoc, Integer> tmp = TermInOneDoc.byte2Object(inOneDoc.toBytes(), 0);
-        System.out.println(tmp.fst);
-
-
-        TermInOneDoc inOneDoc2 = new TermInOneDoc();
-
-        inOneDoc2.setDocId(124);
-        inOneDoc2.setField(112);
-        inOneDoc2.setTf(340);
-        inOneDoc2.setRank(3.564);
-        inOneDoc2.setPositions(Lists.newArrayList(3, 5, 7, 13, 14, 6, 7, 9, 0, 11111, 111));
-
-        TermInfo termInfo = new TermInfo(Lists.newArrayList(inOneDoc, inOneDoc2));
-
-
-        byte[] bytes = termInfo.toBytes();
-
-
-        System.out.println(Joiner.on("\n").join(TermInfo.byte2Object(bytes)));
-
-
-    }
-
-    public List<TermInOneDoc> getInOneDocList() {
-        return inOneDocList;
-    }
-
-    public void setInOneDocList(List<TermInOneDoc> inOneDocList) {
-        this.inOneDocList = inOneDocList;
-    }
 
     @Override
     public String toString() {

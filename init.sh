@@ -12,4 +12,5 @@ tar -xzvf $DATA_PATH
 cd $CUR_PATH
 mvn clean compile
 cd $CUR_PATH"/adminapi/"
-mvn insatll -pl .
+mvn clean install
+#mvn insatll -pl .

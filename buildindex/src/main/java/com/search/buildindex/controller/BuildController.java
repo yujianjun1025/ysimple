@@ -1,8 +1,7 @@
 package com.search.buildindex.controller;
 
 import com.search.buildindex.timetask.RebuildTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -13,10 +12,8 @@ import java.util.Map;
 
 
 @Controller
+@Slf4j
 public class BuildController {
-
-    private static final Logger logger = LoggerFactory.getLogger(BuildController.class);
-
 
     @Resource
     private RebuildTask rebuildTask;

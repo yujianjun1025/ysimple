@@ -4,12 +4,17 @@ import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import com.search.indexserver.util.NumberBytes;
 import com.sun.tools.javac.util.Pair;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 /**
+ *
  * Created by yjj on 16/2/3.
  */
+@Getter
+@Setter
 public class TermInOneDoc implements Comparable<Object> {
     private int docId;
     private int field;
@@ -47,46 +52,6 @@ public class TermInOneDoc implements Comparable<Object> {
                 ", rank=" + rank +
                 ", positions=" + positions +
                 '}';
-    }
-
-    public int getDocId() {
-        return docId;
-    }
-
-    public void setDocId(int docId) {
-        this.docId = docId;
-    }
-
-    public int getField() {
-        return field;
-    }
-
-    public void setField(int field) {
-        this.field = field;
-    }
-
-    public int getTf() {
-        return tf;
-    }
-
-    public void setTf(int tf) {
-        this.tf = tf;
-    }
-
-    public double getRank() {
-        return rank;
-    }
-
-    public void setRank(double rank) {
-        this.rank = rank;
-    }
-
-    public List<Integer> getPositions() {
-        return positions;
-    }
-
-    public void setPositions(List<Integer> positions) {
-        this.positions = positions;
     }
 
     public byte[] toBytes() {

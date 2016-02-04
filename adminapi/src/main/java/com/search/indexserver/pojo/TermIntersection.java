@@ -2,6 +2,8 @@ package com.search.indexserver.pojo;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Map;
 
@@ -9,6 +11,8 @@ import java.util.Map;
  * Created by yjj on 15/12/4.
  * 求交中间过程类
  */
+@Getter
+@Setter
 public class TermIntersection {
 
 
@@ -19,23 +23,6 @@ public class TermIntersection {
         this.docId = docId;
         this.termInfoMap = termInfoMap;
     }
-
-    public int getDocId() {
-        return docId;
-    }
-
-    public void setDocId(int docId) {
-        this.docId = docId;
-    }
-
-    public Map<Integer, TermInOneDoc> getTermInfoMap() {
-        return termInfoMap;
-    }
-
-    public void setTermInfoMap(Map<Integer, TermInOneDoc> termInfoMap) {
-        this.termInfoMap = termInfoMap;
-    }
-
 
     @Override
     public String toString() {

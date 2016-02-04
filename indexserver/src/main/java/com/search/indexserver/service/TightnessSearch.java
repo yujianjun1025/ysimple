@@ -10,9 +10,8 @@ import com.search.indexserver.pojo.TermInOneDoc;
 import com.search.indexserver.pojo.TermIntersection;
 import com.search.indexserver.timetask.RefreshTask;
 import com.search.indexserver.util.GatherUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
@@ -28,9 +27,9 @@ import java.util.concurrent.Executors;
  */
 
 @Repository
+@Slf4j
 public class TightnessSearch {
 
-    private static final Logger logger = LoggerFactory.getLogger(TightnessSearch.class);
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     private static final ExecutorService GET_TERM_INFO_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     private static Ordering<AssembleNode> ordering = new Ordering<AssembleNode>() {
@@ -73,11 +72,11 @@ public class TightnessSearch {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("countDownLatch.await()发生中断异常", e);
+            log.error("countDownLatch.await()发生中断异常", e);
         }
 
         for (TermCodeAndTermInfoList termCodeAndTermInfoList : termCodeAndTermInfoLists) {
-            logger.info("需要求交的集合termCode:{} termInfoList size:{}", termCodeAndTermInfoList.getTermCode(), termCodeAndTermInfoList.getTermInOneDocList().size());
+            log.info("需要求交的集合termCode:{} termInfoList size:{}", termCodeAndTermInfoList.getTermCode(), termCodeAndTermInfoList.getTermInOneDocList().size());
         }
 
         return GatherUtil.intersectionByBinSearch(termCodeAndTermInfoLists);
@@ -151,11 +150,11 @@ public class TightnessSearch {
 
         List<TermIntersection> termIntersection = getDocIdIntersection(invertCache, termCodeList, field);
         long end = System.nanoTime();
-        logger.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
+        log.info("查询词:{}, 求交得到所有docIds耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, termIntersection.size());
         begin = end;
 
         if (CollectionUtils.isEmpty(termCodeList)) {
-            logger.info("termCodeList为 0， 不继续查询");
+            log.info("termCodeList为 0， 不继续查询");
             return Lists.newArrayList();
         }
 
@@ -178,7 +177,7 @@ public class TightnessSearch {
                         }
 
                     } catch (Exception e) {
-                        logger.error("assembleDoc时出现异常", e);
+                        log.error("assembleDoc时出现异常", e);
                     } finally {
                         countDownLatch.countDown();
 
@@ -193,11 +192,11 @@ public class TightnessSearch {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("countDownLatch 发生线程中断异常", e);
+            log.error("countDownLatch 发生线程中断异常", e);
         }
 
         end = System.nanoTime();
-        logger.info("查询词:{}, 过滤到符合要求的docId耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, docIdAndRankRes.size());
+        log.info("查询词:{}, 过滤到符合要求的docId耗时:{}毫秒, 结果数{}", query, (end - begin) * 1.0 / 1000000, docIdAndRankRes.size());
         return Lists.reverse(docIdAndRankRes);
 
     }

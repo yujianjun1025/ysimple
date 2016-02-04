@@ -8,8 +8,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.search.indexserver.pojo.*;
 import com.search.indexserver.util.SegUtil;
 import com.search.indexserver.util.SerializeUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.MappedByteBuffer;
@@ -26,10 +25,10 @@ import java.util.concurrent.Executors;
  * Created by yjj on 15/12/11.
  * 倒排索引类
  */
+@Slf4j
 public class InvertCache {
 
 
-    private static final Logger logger = LoggerFactory.getLogger(InvertCache.class);
     private static final ExecutorService DESERIALIZE_THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     private int OFFSET = 0;
     private FileChannel fc = null;
@@ -58,7 +57,7 @@ public class InvertCache {
 
                 int docCount = 0;
                 //2000只是意淫的一个值
-                for (List<TermInOneDoc> termInOneDocList : Lists.partition(invertCache.cache.get(i), 2000)) {
+                for (List<TermInOneDoc> termInOneDocList : Lists.partition(invertCache.cache.get(i), 4000)) {
                     byte[] bytes = SerializeUtil.serializeBySelf(termInOneDocList);
                     size += bytes.length;
                     invertCache.OFFSET += bytes.length;
@@ -113,7 +112,7 @@ public class InvertCache {
         long begin = System.nanoTime();
         List<TermInOneDoc> res = getTermInfoListByTermCode(termCode);
         long end = System.nanoTime();
-        logger.info("getTermInfoListByTermCode(termCode)耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+        log.info("getTermInfoListByTermCode(termCode)耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
 
         if (res == null) {
             return Lists.newArrayList();
@@ -221,8 +220,8 @@ public class InvertCache {
                 termInOneDoc.setRank(rank);
             }
         }
-        logger.info("完成rank值计算，耗时{}毫秒", System.currentTimeMillis() - begin);
-        logger.info("str2int size:{},  cache size:{}", new Object[]{str2int.size(), cache.size()});
+        log.info("完成rank值计算，耗时{}毫秒", System.currentTimeMillis() - begin);
+        log.info("str2int size:{},  cache size:{}", new Object[]{str2int.size(), cache.size()});
 
     }
 
@@ -231,29 +230,29 @@ public class InvertCache {
         try {
 
             Position position = termCodeAndPosition.get(termCode);
-            logger.info("开始位置:{}, 大小:{} byte ", position.getOffset(), position.getTotalSize());
+            log.info("开始位置:{}, 大小:{} byte ", position.getOffset(), position.getTotalSize());
 
             long begin = System.nanoTime();
             MappedByteBuffer byteBuffer = fc.map(FileChannel.MapMode.READ_ONLY, position.getOffset(), position.getTotalSize());
             long end = System.nanoTime();
 
-            logger.info("fc.map()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+            log.info("fc.map()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
 
             begin = end;
             byte[] bytes = new byte[position.getTotalSize()];
             byteBuffer.get(bytes, 0, position.getTotalSize());
             end = System.nanoTime();
-            logger.info("byteBuffer.get()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+            log.info("byteBuffer.get()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
 
             begin = end;
 
             List<TermInOneDoc> res = parallelDeserialize(position, bytes);
             end = System.nanoTime();
-            logger.info("deserializeByProto()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
+            log.info("deserializeByProto()耗时{}毫秒", (1.0 * (end - begin)) / 1000000);
             return res;
 
         } catch (Exception e) {
-            logger.error("序列化出现异常{}", e);
+            log.error("序列化出现异常{}", e);
         }
 
         return Lists.newArrayList();
@@ -285,9 +284,9 @@ public class InvertCache {
                             map.put(key, tmpList);
                         }
                     } catch (Exception e) {
-                        logger.error("反序列化出现异常", e);
+                        log.error("反序列化出现异常", e);
 
-                        logger.error("tmpBytes size ", tmpBytes.length);
+                        log.error("tmpBytes size ", tmpBytes.length);
                     } finally {
                         countDownLatch.countDown();
                     }

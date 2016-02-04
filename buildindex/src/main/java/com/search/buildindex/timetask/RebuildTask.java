@@ -6,8 +6,7 @@ import com.search.indexserver.cache.InvertCache;
 import com.search.indexserver.pojo.Doc;
 import com.search.indexserver.pojo.DocInfo;
 import com.search.indexserver.util.SegUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -21,9 +20,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 
 @Service
+@Slf4j
 public class RebuildTask {
 
-    private static final Logger logger = LoggerFactory.getLogger(RebuildTask.class);
     private static final String TXT_FILE = "/tmp/search/data/search_data.txt";
     private static final String TERM_FILE = "/tmp/search/invert/termInfo.dat";
     private static final String STR2INT_FILE = "/tmp/search/invert/str2int.txt";
@@ -39,7 +38,7 @@ public class RebuildTask {
     public boolean rebuild() {
 
         if (!readWriteLock.writeLock().tryLock()) {
-            logger.info("重建索引任务还在运行， 稍后重试");
+            log.info("重建索引任务还在运行， 稍后重试");
             return false;
         }
 
@@ -58,10 +57,10 @@ public class RebuildTask {
             writer.close();
 
         } catch (Exception e) {
-            logger.error("序列化文件时出现异常", e);
+            log.error("序列化文件时出现异常", e);
             return false;
         } finally {
-            logger.info("索引任务重建完成");
+            log.info("索引任务重建完成");
             readWriteLock.writeLock().unlock();
         }
         return true;
@@ -72,26 +71,26 @@ public class RebuildTask {
 
 
         long begin = System.currentTimeMillis();
-        logger.info("开始生成倒排");
+        log.info("开始生成倒排");
         buildInvert(invertCache, fileName);
         long end = System.currentTimeMillis();
-        logger.info("生成倒排耗时{}毫秒", end - begin);
+        log.info("生成倒排耗时{}毫秒", end - begin);
 
         begin = end;
-        logger.info("开始计算rank值");
+        log.info("开始计算rank值");
         invertCache.calculateRank();
         end = System.currentTimeMillis();
-        logger.info("计算rerank值耗时{}毫秒", end - begin);
+        log.info("计算rerank值耗时{}毫秒", end - begin);
 
         begin = end;
-        logger.info("开始序列化");
+        log.info("开始序列化");
         try {
             InvertCache.mem2disk(invertCache, STR2INT_FILE, POSITION_FILE, TERM_FILE);
         } catch (Exception e) {
-            logger.error("内存序列化到磁盘出现异常", e);
+            log.error("内存序列化到磁盘出现异常", e);
         }
         end = System.currentTimeMillis();
-        logger.info("序列化完成耗时{}毫秒", end - begin);
+        log.info("序列化完成耗时{}毫秒", end - begin);
         invertCache = null;
 
     }
@@ -125,7 +124,7 @@ public class RebuildTask {
             }
 
         } catch (Exception e) {
-            logger.error("读取文件出现异常{}", e);
+            log.error("读取文件出现异常{}", e);
         } finally {
 
             try {
@@ -133,7 +132,7 @@ public class RebuildTask {
                     bufferedReader.close();
                 }
             } catch (Exception e) {
-                logger.error("关闭bufferedReader时出现异常", e);
+                log.error("关闭bufferedReader时出现异常", e);
             }
 
         }

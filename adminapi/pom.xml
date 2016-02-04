@@ -61,7 +61,6 @@
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-            <version>1.1</version>
         </dependency>
 
         <!-- logback -->
@@ -80,6 +79,10 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
         <!-- 工具 -->
         <dependency>
             <groupId>com.google.guava</groupId>

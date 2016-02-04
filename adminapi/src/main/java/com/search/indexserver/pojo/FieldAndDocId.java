@@ -1,8 +1,14 @@
 package com.search.indexserver.pojo;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
+ *
  * Created by yjj on 15/12/7.
  */
+@Getter
+@Setter
 public class FieldAndDocId {
 
 
@@ -14,19 +20,4 @@ public class FieldAndDocId {
         this.docId = docId;
     }
 
-    public int getDocId() {
-        return docId;
-    }
-
-    public void setDocId(int docId) {
-        this.docId = docId;
-    }
-
-    public int getFieldId() {
-        return fieldId;
-    }
-
-    public void setFieldId(int fieldId) {
-        this.fieldId = fieldId;
-    }
 }

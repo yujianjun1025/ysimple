@@ -1,6 +1,7 @@
 package com.search.indexserver.util;
 
 /**
+ *
  * Created by yjj on 16/2/2.
  */
 
