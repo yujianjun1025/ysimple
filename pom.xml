@@ -257,19 +257,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-
-    <distributionManagement>
-        <repository>
-            <id>nexus-3rd</id>
-            <url>http://maven.sankuai.com/nexus/content/repositories/thirdparty/</url>
-        </repository>
-        <snapshotRepository>
-            <id>nexus-snapshots-3rd</id>
-            <url>http://maven.sankuai.com/nexus/content/repositories/3rdPartySnapshot/</url>
-        </snapshotRepository>
-    </distributionManagement>
-
+    
     <modules>
         <module>adminapi</module>
         <module>buildindex</module>
