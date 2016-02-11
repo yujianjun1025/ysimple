@@ -102,6 +102,12 @@
                 <scope>compile</scope>
             </dependency>
 
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-access</artifactId>
+                <version>1.1.3</version>
+            </dependency>
+
 
             <!--apache提供的一个通用的日志接口使用默认的配置：如果能找到Log4j 则默认使用log4j 实现，
             如果没有则使用JDK14Logger 实现，再没有则使用commons-logging 内部提供的SimpleLog 实现
@@ -257,7 +263,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
+
     <modules>
         <module>adminapi</module>
         <module>buildindex</module>

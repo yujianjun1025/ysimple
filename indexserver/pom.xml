@@ -18,23 +18,25 @@
         <dependency>
             <groupId>search</groupId>
             <artifactId>adminapi</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>log4j</artifactId>
-                    <groupId>log4j</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>logkit</artifactId>
-                    <groupId>logkit</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>minlog</artifactId>
-                    <groupId>com.esotericsoftware.minlog</groupId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-access</artifactId>
         </dependency>
 
     </dependencies>
+
 
     <profiles>
         <profile>
